@@ -26,6 +26,7 @@
 #include <iostream>
 #include <memory>
 #include <mutex>
+
 // gobal constant
 const int MinWidth = 6;
 const int MinHeight = 8;
@@ -145,6 +146,7 @@ int32_t main(int32_t argc, char **argv) {
                 cv::Mat BlueContour_img;
                 cv::Mat BlueConvexHulls_img;
                 cv::Mat blueCones_img;
+                std::vector<std::vector<int>> blueCones_coordiate;               
 
                 std::vector<std::vector<cv::Point> > Bluecontours;
                 std::vector<std::vector<cv::Point> > blueConesConvex;
@@ -158,7 +160,7 @@ int32_t main(int32_t argc, char **argv) {
                 cv::Mat YellowContour_img;
                 cv::Mat YellowConvexHulls_img;
                 cv::Mat YellowCones_img;
-
+                std::vector<std::vector<int>> YellowCones_coordiate; 
                 cv::Mat imgWithCones;
                 imgWithCones = img.clone();
 
@@ -218,12 +220,15 @@ int32_t main(int32_t argc, char **argv) {
                 cv::drawContours(BlueConvexHulls_img, BlueConvexHulls, -1, cv::Scalar(0,0,128));
 
                 std::vector<std::vector<cv::Point> > YellowConvexHulls(Yellowcontours.size());
+
                 for (unsigned int i = 0; i < Yellowcontours.size(); i++) {
                     cv::convexHull(Yellowcontours[i], YellowConvexHulls[i]);
                 }
                 YellowConvexHulls_img = cv::Mat(img.size(), CV_8UC3, cv::Scalar(0, 0, 0));
                 cv::drawContours(YellowConvexHulls_img, YellowConvexHulls, -1, cv::Scalar(255,255,0));
                 
+
+
                 //elimnate not-cone objects 
                 for (auto &BlueconvexHull_each : BlueConvexHulls) {
                    if (isTrafficCone(BlueconvexHull_each)) {
@@ -243,19 +248,31 @@ int32_t main(int32_t argc, char **argv) {
 
 
                 //Draw a rectangle on each dectect blue cone
-                for (auto &blueConesConvex_each : blueConesConvex) {
+                for (unsigned int i = 0; i < blueConesConvex.size(); i++){
+                     auto blueConesConvex_each = blueConesConvex[i];
                      cv::Moments bluemoments = cv::moments(blueConesConvex_each);
                      int xCenter = (int)(bluemoments.m10 / bluemoments.m00);
                      int yCenter = (int)(bluemoments.m01 / bluemoments.m00);
-                     //cv::circle(imgWithCones, cv::Point(xCenter, yCenter), 9, cv::Scalar(0,255,255), -1);
+                  //change cordinate to kiwi car
+                     int xi = xCenter+320-HEIGHT;
+                     int yi = yCenter-WIDTH/2;
+                     std::vector<int> blueCones_coordiatei = {xi,yi};
+                     blueCones_coordiate.push_back(blueCones_coordiatei); 
+                     //std::cout << "xi=" << xi <<"yi" << yi << std::endl;
                      cv::rectangle(imgWithCones, cv::Point(xCenter-25, yCenter+320-50),cv::Point(xCenter+25, yCenter+320+40), cv::Scalar(255,255,0),2);
                 }
+         
 
-                for (auto &YellowConesConvex_each : YellowConesConvex) {
+                for (unsigned int i = 0; i < YellowConesConvex.size(); i++){
+                     auto YellowConesConvex_each=YellowConesConvex[i];
                      cv::Moments Yellowmoments = cv::moments(YellowConesConvex_each);
                      int xCenter = (int)(Yellowmoments.m10 / Yellowmoments.m00);
-                     int yCenter = (int)(Yellowmoments.m01 / Yellowmoments.m00);
-                     //cv::circle(imgWithCones, cv::Point(xCenter, yCenter), 9, cv::Scalar(0,255,255), -1);
+                     int yCenter = (int)(Yellowmoments.m01 / Yellowmoments.m00);                     
+                //change cordinate to kiwi car
+                     int xi = xCenter+320-HEIGHT;
+                     int yi = yCenter-WIDTH/2;
+                     std::vector<int> YellowCones_coordiatei = {xi,yi};
+                     YellowCones_coordiate.push_back(YellowCones_coordiatei);
                      cv::rectangle(imgWithCones, cv::Point(xCenter-25, yCenter+320-50),cv::Point(xCenter+25, yCenter+320+40), cv::Scalar(255,255,255),2);
                 }
 
