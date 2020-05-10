@@ -20,6 +20,7 @@
 
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/core/mat.hpp>
 
 #include <cstdint>
 #include <iostream>
@@ -29,8 +30,8 @@
 const int MinWidth = 6;
 const int MinHeight = 8;
 const double MaxRatio = 0.8;
-const int MinArea = 70;
-const int MaxArea = 2200;
+const int MinArea = 60;
+const int MaxArea = 2700;
 
 
 // define lambda function 
@@ -133,79 +134,140 @@ int32_t main(int32_t argc, char **argv) {
 
                 // TODO: Do something with the frame.
                 cv::Mat hsv;
-                cv::Mat BuleColourThreshod;
-                cv::Mat dilate;
-                cv::Mat erode;
-                cv::Mat gaussian;
-                cv::Mat canny;
-                cv::Mat Contour_img;
-                cv::Mat ConvexHulls_img;
+                //cv::Mat Ones;
+                //Ones = cv::Mat::zeros(cv::Size(320, 1280), CV_32F);
+                // BLUE CONES DETECTION DECLARE 
+                cv::Mat BlueColourThreshod;
+                cv::Mat Bluedilate;
+                cv::Mat Blueerode;
+                cv::Mat Bluegaussian;
+                cv::Mat Bluecanny;
+                cv::Mat BlueContour_img;
+                cv::Mat BlueConvexHulls_img;
                 cv::Mat blueCones_img;
+
+                std::vector<std::vector<cv::Point> > Bluecontours;
+                std::vector<std::vector<cv::Point> > blueConesConvex;
+
+                // YELLOW CONES DETECTION DECLARE 
+                cv::Mat YellowColourThreshod;
+                cv::Mat Yellowdilate;
+                cv::Mat Yellowerode;
+                cv::Mat Yellowgaussian;
+                cv::Mat Yellowcanny;
+                cv::Mat YellowContour_img;
+                cv::Mat YellowConvexHulls_img;
+                cv::Mat YellowCones_img;
+
                 cv::Mat imgWithCones;
                 imgWithCones = img.clone();
 
-                std::vector<std::vector<cv::Point> > contours;
-                std::vector<std::vector<cv::Point> > blueConesConvex;
+                std::vector<std::vector<cv::Point> > Yellowcontours;
+                std::vector<std::vector<cv::Point> > YellowConesConvex;
                 
 
                 cv::cvtColor(img,hsv,cv::COLOR_BGR2HSV);
-                cv::Scalar hsvLow(110,50,50);
-                cv::Scalar hsvHi(130,255,255);
-                cv::inRange(hsv,hsvLow,hsvHi,BuleColourThreshod);
+
+                cv::Scalar hsvBlueLow(100,70,40);
+                cv::Scalar hsvBlueHi(124,255,255);
+                cv::inRange(hsv,hsvBlueLow,hsvBlueHi,BlueColourThreshod);
+
+                cv::Scalar hsvYellowLow(11,70,60);
+                cv::Scalar hsvYellowHi(34,255,255);
+                cv::inRange(hsv,hsvYellowLow,hsvYellowHi,YellowColourThreshod);
+
+                //Ones.copyTo(BlueColourThreshod.rowRange(0, 319));
+                //Ones.row(0, 69).copyTo(BlueColourThreshod.rowRange(650, 719));
                 //Dilate
                 uint32_t iterations{12};
-                cv::dilate(BuleColourThreshod,dilate,cv::Mat(),cv::Point(-1,1),iterations,1,1);
+                cv::dilate(BlueColourThreshod.rowRange(320, 650),Bluedilate,cv::Mat(),cv::Point(-1,1),iterations,1,1);
+
+                cv::dilate(YellowColourThreshod.rowRange(320, 650),Yellowdilate,cv::Mat(),cv::Point(-1,1),iterations,1,1);
 
                 //Erode
-                cv::erode(dilate,erode,cv::Mat(),cv::Point(-1,1),iterations,1,1);
+                cv::erode(Bluedilate,Blueerode,cv::Mat(),cv::Point(-1,1),iterations,1,1);
+
+                cv::erode(Yellowdilate,Yellowerode,cv::Mat(),cv::Point(-1,1),iterations,1,1);
 
                 //Apply Gaussian filter
-                cv::GaussianBlur(erode, gaussian, cv::Size(5, 5), 0);
+                cv::GaussianBlur(Blueerode, Bluegaussian, cv::Size(5, 5), 0);
+
+                cv::GaussianBlur(Yellowerode, Yellowgaussian, cv::Size(5, 5), 0);
 
                 //Edge dectection
-                cv::Canny(gaussian,canny,30,90,3);  
+                cv::Canny(Bluegaussian,Bluecanny,30,90,3);  
+
+                cv::Canny(Yellowgaussian,Yellowcanny,30,90,3); 
                 
+
                 // find and draw contours
-                cv::findContours(canny.clone(), contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
-                Contour_img = cv::Mat(img.size(), CV_8UC3, cv::Scalar(0, 0, 0));
-                cv::drawContours(Contour_img, contours, -1, cv::Scalar(0,0,255)); //must be diff. color 
+                cv::findContours(Bluecanny.clone(), Bluecontours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+                BlueContour_img = cv::Mat(img.size(), CV_8UC3, cv::Scalar(0, 0, 0));
+                cv::drawContours(BlueContour_img, Bluecontours, -1, cv::Scalar(0,0,128)); //must be diff. color 
+
+                cv::findContours(Yellowcanny.clone(), Yellowcontours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+                YellowContour_img = cv::Mat(img.size(), CV_8UC3, cv::Scalar(0, 0, 0));
+                cv::drawContours(YellowContour_img, Yellowcontours, -1, cv::Scalar(255,255,0)); //must be diff. color 
 
                 //find and draw convex hulls
-                std::vector<std::vector<cv::Point> > ConvexHulls(contours.size());
-                for (unsigned int i = 0; i < contours.size(); i++) {
-                    cv::convexHull(contours[i], ConvexHulls[i]);
+                std::vector<std::vector<cv::Point> > BlueConvexHulls(Bluecontours.size());
+                for (unsigned int i = 0; i < Bluecontours.size(); i++) {
+                    cv::convexHull(Bluecontours[i], BlueConvexHulls[i]);
                 }
-                ConvexHulls_img = cv::Mat(img.size(), CV_8UC3, cv::Scalar(0, 0, 0));
-                cv::drawContours(ConvexHulls_img, ConvexHulls, -1, cv::Scalar(0,0,255));
+                BlueConvexHulls_img = cv::Mat(img.size(), CV_8UC3, cv::Scalar(0, 0, 0));
+                cv::drawContours(BlueConvexHulls_img, BlueConvexHulls, -1, cv::Scalar(0,0,128));
+
+                std::vector<std::vector<cv::Point> > YellowConvexHulls(Yellowcontours.size());
+                for (unsigned int i = 0; i < Yellowcontours.size(); i++) {
+                    cv::convexHull(Yellowcontours[i], YellowConvexHulls[i]);
+                }
+                YellowConvexHulls_img = cv::Mat(img.size(), CV_8UC3, cv::Scalar(0, 0, 0));
+                cv::drawContours(YellowConvexHulls_img, YellowConvexHulls, -1, cv::Scalar(255,255,0));
                 
                 //elimnate not-cone objects 
-                for (auto &convexHull_each : ConvexHulls) {
-                   if (isTrafficCone(convexHull_each)) {
-                      blueConesConvex.push_back(convexHull_each);
+                for (auto &BlueconvexHull_each : BlueConvexHulls) {
+                   if (isTrafficCone(BlueconvexHull_each)) {
+                      blueConesConvex.push_back(BlueconvexHull_each);
                    }
                 }
                blueCones_img = cv::Mat(img.size(), CV_8UC3, cv::Scalar(0, 0, 0));
-               cv::drawContours(blueCones_img, blueConesConvex, -1, cv::Scalar(0,0,255));
-//               cv::drawContours(imgWithCones, blueConesConvex, -1, cv::Scalar(0,0,255));
+               cv::drawContours(blueCones_img, blueConesConvex, -1, cv::Scalar(0,0,128));
+
+                for (auto &YellowconvexHull_each : YellowConvexHulls) {
+                   if (isTrafficCone(YellowconvexHull_each)) {
+                      YellowConesConvex.push_back(YellowconvexHull_each);
+                   }
+                }
+               YellowCones_img = cv::Mat(img.size(), CV_8UC3, cv::Scalar(0, 0, 0));
+               cv::drawContours(YellowCones_img, YellowConesConvex, -1, cv::Scalar(255,255,0));
+
 
                 //Draw a rectangle on each dectect blue cone
                 for (auto &blueConesConvex_each : blueConesConvex) {
-                     cv::Moments moments = cv::moments(blueConesConvex_each);
-                     int xCenter = (int)(moments.m10 / moments.m00);
-                     int yCenter = (int)(moments.m01 / moments.m00);
+                     cv::Moments bluemoments = cv::moments(blueConesConvex_each);
+                     int xCenter = (int)(bluemoments.m10 / bluemoments.m00);
+                     int yCenter = (int)(bluemoments.m01 / bluemoments.m00);
                      //cv::circle(imgWithCones, cv::Point(xCenter, yCenter), 9, cv::Scalar(0,255,255), -1);
-                     cv::rectangle(imgWithCones, cv::Point(xCenter-25, yCenter-50),cv::Point(xCenter+25, yCenter+40), cv::Scalar(0,255,0),2);
+                     cv::rectangle(imgWithCones, cv::Point(xCenter-25, yCenter+320-50),cv::Point(xCenter+25, yCenter+320+40), cv::Scalar(255,255,0),2);
+                }
+
+                for (auto &YellowConesConvex_each : YellowConesConvex) {
+                     cv::Moments Yellowmoments = cv::moments(YellowConesConvex_each);
+                     int xCenter = (int)(Yellowmoments.m10 / Yellowmoments.m00);
+                     int yCenter = (int)(Yellowmoments.m01 / Yellowmoments.m00);
+                     //cv::circle(imgWithCones, cv::Point(xCenter, yCenter), 9, cv::Scalar(0,255,255), -1);
+                     cv::rectangle(imgWithCones, cv::Point(xCenter-25, yCenter+320-50),cv::Point(xCenter+25, yCenter+320+40), cv::Scalar(255,255,255),2);
                 }
 
 
                 // Display image.
                 if (VERBOSE) {
                     cv::imshow(sharedMemory->name().c_str(), img);
-                    //cv::imshow("erode", erode);
-                    cv::imshow("gaussion", gaussian);
-                    //cv::imshow("canny", canny);
-                    //cv::imshow("Contours", Contour_img);
-                    cv::imshow("ConvexHulls", ConvexHulls_img);
+                    //cv::imshow("erode", Blueerode);
+                    cv::imshow("gaussian", Bluegaussian);
+                    //cv::imshow("canny", Bluecanny);
+                    //cv::imshow("Contours", BlueContour_img);
+                    //cv::imshow("ConvexHulls", BlueConvexHulls_img);
                     cv::imshow("blueCones_img", blueCones_img);
                     cv::imshow("imgWithCones", imgWithCones);
                     cv::waitKey(1);
@@ -252,4 +314,3 @@ int32_t main(int32_t argc, char **argv) {
     }
     return retCode;
 }
-
