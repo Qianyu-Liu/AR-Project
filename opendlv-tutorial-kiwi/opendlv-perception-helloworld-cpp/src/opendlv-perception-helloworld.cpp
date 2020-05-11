@@ -26,14 +26,13 @@
 #include <iostream>
 #include <memory>
 #include <mutex>
-#include <Eigen/Eigen>
 
 // gobal constant
-const int MinWidth = 6;
-const int MinHeight = 8;
-const double MaxRatio = 0.8;
-const int MinArea = 60;
-const int MaxArea = 2700;
+const int MinWidth = 5;
+const int MinHeight = 10;
+const double MaxRatio = 0.2;
+const int MinArea = 50;
+const int MaxArea = 4500;
 
 
 // define lambda function 
@@ -51,6 +50,40 @@ bool isTrafficCone(std::vector<cv::Point> convexHull){
       return true;
       }
 
+
+bool polynomial_curve_fit(std::vector<cv::Point>& key_point, int n, cv::Mat& A)
+{
+      //Number of key points
+      int N = key_point.size();
+ 
+      //构造矩阵X
+      cv::Mat X = cv::Mat::zeros(n + 1, n + 1, CV_64FC1);
+      for (int i = 0; i < n + 1; i++)
+      {
+            for (int j = 0; j < n + 1; j++)
+            {
+                  for (int k = 0; k < N; k++)
+                  {
+                        X.at<double>(i, j) = X.at<double>(i, j) + std::pow(key_point[k].y, i + j);
+                  }
+            }
+      }
+ 
+      //构造矩阵Y
+      cv::Mat Y = cv::Mat::zeros(n + 1, 1, CV_64FC1);
+      for (int i = 0; i < n + 1; i++)
+      {
+            for (int k = 0; k < N; k++)
+            {
+                  Y.at<double>(i, 0) = Y.at<double>(i, 0) + std::pow(key_point[k].y, i) * key_point[k].x;
+            }
+      }
+ 
+      A = cv::Mat::zeros(n + 1, 1, CV_64FC1);
+      //求解矩阵A
+      cv::solve(X, Y, A, cv::DECOMP_LU);
+      return true;
+}
 
 //void drawAtCone(std::vector<cv::Point> trafficCone, cv::Mat &img) {
 //    cv::Moments moments = cv::moments(trafficCone);
@@ -147,7 +180,7 @@ int32_t main(int32_t argc, char **argv) {
                 cv::Mat BlueContour_img;
                 cv::Mat BlueConvexHulls_img;
                 cv::Mat blueCones_img;
-                std::vector<std::vector<int>> blueCones_coordiate;               
+                std::vector<cv::Point> blueCones_coordiate;               
 
                 std::vector<std::vector<cv::Point> > Bluecontours;
                 std::vector<std::vector<cv::Point> > blueConesConvex;
@@ -161,7 +194,7 @@ int32_t main(int32_t argc, char **argv) {
                 cv::Mat YellowContour_img;
                 cv::Mat YellowConvexHulls_img;
                 cv::Mat YellowCones_img;
-                std::vector<std::vector<int>> YellowCones_coordiate; 
+                std::vector<cv::Point> YellowCones_coordiate; 
                 cv::Mat imgWithCones;
                 imgWithCones = img.clone();
 
@@ -175,7 +208,7 @@ int32_t main(int32_t argc, char **argv) {
                 cv::Scalar hsvBlueHi(124,255,255);
                 cv::inRange(hsv,hsvBlueLow,hsvBlueHi,BlueColourThreshod);
 
-                cv::Scalar hsvYellowLow(11,70,60);
+                cv::Scalar hsvYellowLow(11,60,100);
                 cv::Scalar hsvYellowHi(34,255,255);
                 cv::inRange(hsv,hsvYellowLow,hsvYellowHi,YellowColourThreshod);
 
@@ -183,9 +216,9 @@ int32_t main(int32_t argc, char **argv) {
                 //Ones.row(0, 69).copyTo(BlueColourThreshod.rowRange(650, 719));
                 //Dilate
                 uint32_t iterations{12};
-                cv::dilate(BlueColourThreshod.rowRange(320, 650),Bluedilate,cv::Mat(),cv::Point(-1,1),iterations,1,1);
+                cv::dilate(BlueColourThreshod.rowRange(400, 650),Bluedilate,cv::Mat(),cv::Point(-1,1),iterations,1,1);
 
-                cv::dilate(YellowColourThreshod.rowRange(320, 650),Yellowdilate,cv::Mat(),cv::Point(-1,1),iterations,1,1);
+                cv::dilate(YellowColourThreshod.rowRange(400, 650),Yellowdilate,cv::Mat(),cv::Point(-1,1),iterations,1,1);
 
                 //Erode
                 cv::erode(Bluedilate,Blueerode,cv::Mat(),cv::Point(-1,1),iterations,1,1);
@@ -255,16 +288,15 @@ int32_t main(int32_t argc, char **argv) {
                      int xCenter = (int)(bluemoments.m10 / bluemoments.m00);
                      int yCenter = (int)(bluemoments.m01 / bluemoments.m00);
                   //change cordinate to kiwi car
-                     int xi = xCenter+320-HEIGHT;
-                     int yi = yCenter-WIDTH/2;
-                     std::vector<int> blueCones_coordiatei = {xi,yi};
+                     int xi = xCenter;
+                     int yi = yCenter+400;
+                     cv::Point blueCones_coordiatei(xi,yi);
                      blueCones_coordiate.push_back(blueCones_coordiatei); 
                      //std::cout << "xi=" << xi <<"yi" << yi << std::endl;
-                     cv::rectangle(imgWithCones, cv::Point(xCenter-25, yCenter+320-50),cv::Point(xCenter+25, yCenter+320+40), cv::Scalar(255,255,0),2);
+                     cv::rectangle(imgWithCones, cv::Point(xCenter-25, yCenter+400-50),cv::Point(xCenter+25, yCenter+400+40), cv::Scalar(255,255,0),2);
                 }
-
-
-
+                //cv::Point right_init(1280,700);
+                //blueCones_coordiate.push_back(right_init); 
 
                 for (unsigned int i = 0; i < YellowConesConvex.size(); i++){
                      auto YellowConesConvex_each=YellowConesConvex[i];
@@ -272,12 +304,56 @@ int32_t main(int32_t argc, char **argv) {
                      int xCenter = (int)(Yellowmoments.m10 / Yellowmoments.m00);
                      int yCenter = (int)(Yellowmoments.m01 / Yellowmoments.m00);                     
                 //change cordinate to kiwi car
-                     int xi = xCenter+320-HEIGHT;
-                     int yi = yCenter-WIDTH/2;
-                     std::vector<int> YellowCones_coordiatei = {xi,yi};
+                     int xi = xCenter;
+                     int yi = yCenter+400;
+                     cv::Point YellowCones_coordiatei(xi,yi);
                      YellowCones_coordiate.push_back(YellowCones_coordiatei);
-                     cv::rectangle(imgWithCones, cv::Point(xCenter-25, yCenter+320-50),cv::Point(xCenter+25, yCenter+320+40), cv::Scalar(255,255,255),2);
+                     cv::rectangle(imgWithCones, cv::Point(xCenter-25, yCenter+400-50),cv::Point(xCenter+25, yCenter+400+40), cv::Scalar(255,255,255),2);
                 }
+                //cv::Point left_init(0,700);
+                //YellowCones_coordiate.push_back(left_init); 
+
+       //cv::Mat image = cv::Mat::zeros(720, 1280, CV_8UC3);
+	//image.setTo(cv::Scalar(100, 0, 0));
+ 
+
+ 
+//将拟合点绘制到空白图上  
+
+	//cv::circle(image, blueCones_coordiate, 5, cv::Scalar(0, 0, 255), 2, 8, 0);
+	
+ 
+//绘制折线
+                //cv::polylines(imgWithCones, blueCones_coordiate, false, cv::Scalar(255, 255, 0), 1, 8, 0);
+                cv::Mat A;
+                polynomial_curve_fit(blueCones_coordiate, 2, A);
+                std::vector<cv::Point> blue_points_fitted;
+
+                for (int y = 0; y < 720; y++)
+                {
+                    double x = A.at<double>(0, 0) + A.at<double>(1, 0) * y + A.at<double>(2, 0)*std::pow(y, 2) + A.at<double>(3, 0)*std::pow(y, 3);
+                    blue_points_fitted.push_back(cv::Point(static_cast<int>(x), y ));
+                }
+                cv::polylines(imgWithCones, blue_points_fitted, false, cv::Scalar(255, 255, 0), 1, 8, 0);
+
+
+
+                //cv::polylines(imgWithCones, YellowCones_coordiate, false, cv::Scalar(255, 255, 255), 1, 8, 0);
+                cv::Mat B;
+                polynomial_curve_fit(YellowCones_coordiate, 2, B);
+                std::vector<cv::Point> yellow_points_fitted;
+
+                for (int y = 0; y < 720; y++)
+                {
+                    double x = B.at<double>(0, 0) + B.at<double>(1, 0) * y + B.at<double>(2, 0)*std::pow(y, 2) + B.at<double>(3, 0)*std::pow(y, 3);
+                    yellow_points_fitted.push_back(cv::Point(static_cast<int>(x), y));
+                }
+                cv::polylines(imgWithCones, yellow_points_fitted, false, cv::Scalar(255, 255, 255), 1, 8, 0);
+                
+
+ 
+
+
 
 
                 // Display image.
@@ -285,11 +361,13 @@ int32_t main(int32_t argc, char **argv) {
                     cv::imshow(sharedMemory->name().c_str(), img);
                     //cv::imshow("erode", Blueerode);
                     cv::imshow("gaussian", Bluegaussian);
-                    //cv::imshow("canny", Bluecanny);
+                    cv::imshow("bluecanny", Bluecanny);
+                    cv::imshow("yellowcanny", Yellowcanny);
                     //cv::imshow("Contours", BlueContour_img);
                     //cv::imshow("ConvexHulls", BlueConvexHulls_img);
                     cv::imshow("blueCones_img", blueCones_img);
                     cv::imshow("imgWithCones", imgWithCones);
+	//cv::imshow("image", image);
                     cv::waitKey(1);
                 }
 
