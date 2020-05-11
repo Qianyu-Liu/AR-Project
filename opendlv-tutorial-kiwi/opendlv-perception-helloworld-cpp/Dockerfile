@@ -21,11 +21,14 @@ RUN apt-get install -y \
     build-essential \
     cmake \
     software-properties-common \
-    libopencv-dev
+    libopencv-dev \
+    mercurial
 
 RUN add-apt-repository -y ppa:chrberger/libcluon
 RUN apt-get update
 RUN apt-get install -y libcluon
+
+RUN hg clone https://bitbucket.org/eigen/eigen && cd eigen && mkdir build && cd build && cmake .. && make -j4 install
 
 ADD . /opt/sources
 WORKDIR /opt/sources

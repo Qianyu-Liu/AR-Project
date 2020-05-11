@@ -26,6 +26,7 @@
 #include <iostream>
 #include <memory>
 #include <mutex>
+#include <Eigen/Eigen>
 
 // gobal constant
 const int MinWidth = 6;
@@ -261,7 +262,9 @@ int32_t main(int32_t argc, char **argv) {
                      //std::cout << "xi=" << xi <<"yi" << yi << std::endl;
                      cv::rectangle(imgWithCones, cv::Point(xCenter-25, yCenter+320-50),cv::Point(xCenter+25, yCenter+320+40), cv::Scalar(255,255,0),2);
                 }
-         
+
+
+
 
                 for (unsigned int i = 0; i < YellowConesConvex.size(); i++){
                      auto YellowConesConvex_each=YellowConesConvex[i];
