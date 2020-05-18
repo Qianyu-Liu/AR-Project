@@ -21,14 +21,11 @@ RUN apt-get install -y \
     build-essential \
     cmake \
     software-properties-common \
-    libopencv-dev \
-    mercurial
+    libopencv-dev
 
 RUN add-apt-repository -y ppa:chrberger/libcluon
 RUN apt-get update
 RUN apt-get install -y libcluon
-
-RUN hg clone https://bitbucket.org/eigen/eigen && cd eigen && mkdir build && cd build && cmake .. && make -j4 install
 
 ADD . /opt/sources
 WORKDIR /opt/sources
@@ -56,4 +53,5 @@ RUN apt-get install -y \
 
 WORKDIR /usr/bin
 COPY --from=builder /tmp/dest /usr
+COPY --from=builder opt/sources/src/cascade.xml /usr
 ENTRYPOINT ["/usr/bin/opendlv-perception-helloworld"]

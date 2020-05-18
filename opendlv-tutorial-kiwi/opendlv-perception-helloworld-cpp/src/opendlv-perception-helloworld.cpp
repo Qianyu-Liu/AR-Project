@@ -18,6 +18,7 @@
 #include "cluon-complete.hpp"
 #include "opendlv-standard-message-set.hpp"
 
+#include <opencv2/objdetect/objdetect.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/core/mat.hpp>
@@ -145,8 +146,16 @@ int32_t main(int32_t argc, char **argv) {
             };
             // Finally, we register our lambda for the message identifier for opendlv::proxy::DistanceReading.
             od4.dataTrigger(opendlv::proxy::DistanceReading::ID(), onDistance);
+            
 
-
+            // LOAD CASCADE CLASSIFIER
+            cv::CascadeClassifier kiwi_detector;
+            kiwi_detector.load("/usr/cascade.xml");
+            	if (kiwi_detector.empty())
+	{
+		std::cout << "分类器加载失败!!!" << std::endl;
+		return -1;
+	}
             // Endless loop; end the program by pressing Ctrl-C.
             while (od4.isRunning()) {
                 cv::Mat img;
@@ -214,6 +223,14 @@ int32_t main(int32_t argc, char **argv) {
 
                 //Ones.copyTo(BlueColourThreshod.rowRange(0, 319));
                 //Ones.row(0, 69).copyTo(BlueColourThreshod.rowRange(650, 719));
+
+
+
+                
+
+
+
+
                 //Dilate
                 uint32_t iterations{12};
                 cv::dilate(BlueColourThreshod.rowRange(400, 650),Bluedilate,cv::Mat(),cv::Point(-1,1),iterations,1,1);
@@ -295,8 +312,8 @@ int32_t main(int32_t argc, char **argv) {
                      //std::cout << "xi=" << xi <<"yi" << yi << std::endl;
                      cv::rectangle(imgWithCones, cv::Point(xCenter-25, yCenter+400-50),cv::Point(xCenter+25, yCenter+400+40), cv::Scalar(255,255,0),2);
                 }
-                //cv::Point right_init(1280,700);
-                //blueCones_coordiate.push_back(right_init); 
+                cv::Point right_init(1280,700);
+                blueCones_coordiate.push_back(right_init); 
 
                 for (unsigned int i = 0; i < YellowConesConvex.size(); i++){
                      auto YellowConesConvex_each=YellowConesConvex[i];
@@ -310,8 +327,8 @@ int32_t main(int32_t argc, char **argv) {
                      YellowCones_coordiate.push_back(YellowCones_coordiatei);
                      cv::rectangle(imgWithCones, cv::Point(xCenter-25, yCenter+400-50),cv::Point(xCenter+25, yCenter+400+40), cv::Scalar(255,255,255),2);
                 }
-                //cv::Point left_init(0,700);
-                //YellowCones_coordiate.push_back(left_init); 
+                cv::Point left_init(0,700);
+                YellowCones_coordiate.push_back(left_init); 
 
        //cv::Mat image = cv::Mat::zeros(720, 1280, CV_8UC3);
 	//image.setTo(cv::Scalar(100, 0, 0));
@@ -329,29 +346,61 @@ int32_t main(int32_t argc, char **argv) {
                 polynomial_curve_fit(blueCones_coordiate, 2, A);
                 std::vector<cv::Point> blue_points_fitted;
 
-                for (int y = 0; y < 720; y++)
+                for (int y = 300; y < 620; y++)
                 {
                     double x = A.at<double>(0, 0) + A.at<double>(1, 0) * y + A.at<double>(2, 0)*std::pow(y, 2) + A.at<double>(3, 0)*std::pow(y, 3);
                     blue_points_fitted.push_back(cv::Point(static_cast<int>(x), y ));
                 }
                 cv::polylines(imgWithCones, blue_points_fitted, false, cv::Scalar(255, 255, 0), 1, 8, 0);
 
-
+                //Draw blue line on another image
+                cv::Mat image1b = cv::Mat::zeros(720, 1280, CV_8UC3);
+                cv::polylines(image1b, blue_points_fitted, false, cv::Scalar(255, 255, 255), 1, 8, 0);
 
                 //cv::polylines(imgWithCones, YellowCones_coordiate, false, cv::Scalar(255, 255, 255), 1, 8, 0);
                 cv::Mat B;
                 polynomial_curve_fit(YellowCones_coordiate, 2, B);
                 std::vector<cv::Point> yellow_points_fitted;
 
-                for (int y = 0; y < 720; y++)
+                for (int y = 300; y < 620; y++)
                 {
                     double x = B.at<double>(0, 0) + B.at<double>(1, 0) * y + B.at<double>(2, 0)*std::pow(y, 2) + B.at<double>(3, 0)*std::pow(y, 3);
                     yellow_points_fitted.push_back(cv::Point(static_cast<int>(x), y));
                 }
                 cv::polylines(imgWithCones, yellow_points_fitted, false, cv::Scalar(255, 255, 255), 1, 8, 0);
-                
 
+                //Draw yellow line on another image
+                cv::Mat image1y = cv::Mat::zeros(720, 1280, CV_8UC3);
+                cv::polylines(image1y, yellow_points_fitted, false, cv::Scalar(255, 255, 255), 1, 8, 0);
+
+                //Draw a half ellipse
+                cv::ellipse(imgWithCones,cv::Point(640,700), cv::Size(960, 250), 0.0, 180.0, 360.0 , cv::Scalar(255, 255, 255), 1, 8, 0);
  
+                //Draw a half ellipse, multiply,find insection.
+                cv::Mat image2 = cv::Mat::zeros(720, 1280, CV_8UC3);
+                cv::ellipse(image2,cv::Point(640,700), cv::Size(960, 250), 0.0, 180.0, 360.0 , cv::Scalar(255, 255, 255), 1, 8, 0); 
+
+                cv::Mat image3 = cv::Mat::zeros(720, 1280, CV_8UC3);
+                cv::Mat image3b = cv::Mat::zeros(720, 1280, CV_8UC3);
+                cv::Mat image3y = cv::Mat::zeros(720, 1280, CV_8UC3);
+                cv::multiply(image1b, image2, image3b, 1.0, -1);
+                cv::multiply(image1y, image2, image3y, 1.0, -1);
+                cv::add(image3b, image3y,image3,cv::noArray(),-1);
+
+
+
+                //kiwi detection
+                cv::Mat img_gray;
+                cv::cvtColor(img.rowRange(300, 650),img_gray, cv::COLOR_BGR2GRAY);
+                std::vector<cv::Rect> kiwi;
+		kiwi_detector.detectMultiScale(img_gray, kiwi, 1.1, 3, 0,cv::Size(72,72), cv::Size(500, 300));
+		for (size_t i = 0; i < kiwi.size(); i++)
+		{
+                        cv::Point center(kiwi[i].x + kiwi[i].width / 2,kiwi[i].y + kiwi[i].height / 2 + 300);
+			cv::rectangle(imgWithCones,cv::Point(kiwi[i].x, kiwi[i].y + 300), cv::Point(kiwi[i].x + kiwi[i].width, kiwi[i].y + kiwi[i].height+ 300),cv::Scalar(0, 0, 255), 1, 8, 0);
+		}
+		//cv::imshow("detect result", imgWithCones);
+
 
 
 
@@ -367,7 +416,7 @@ int32_t main(int32_t argc, char **argv) {
                     //cv::imshow("ConvexHulls", BlueConvexHulls_img);
                     cv::imshow("blueCones_img", blueCones_img);
                     cv::imshow("imgWithCones", imgWithCones);
-	//cv::imshow("image", image);
+	cv::imshow("image3", image3);
                     cv::waitKey(1);
                 }
 
