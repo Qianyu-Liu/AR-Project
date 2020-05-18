@@ -52,39 +52,39 @@ bool isTrafficCone(std::vector<cv::Point> convexHull){
       }
 
 
-bool polynomial_curve_fit(std::vector<cv::Point>& key_point, int n, cv::Mat& A)
-{
-      //Number of key points
-      int N = key_point.size();
- 
-      //构造矩阵X
-      cv::Mat X = cv::Mat::zeros(n + 1, n + 1, CV_64FC1);
-      for (int i = 0; i < n + 1; i++)
-      {
-            for (int j = 0; j < n + 1; j++)
-            {
-                  for (int k = 0; k < N; k++)
-                  {
-                        X.at<double>(i, j) = X.at<double>(i, j) + std::pow(key_point[k].y, i + j);
-                  }
-            }
-      }
- 
-      //构造矩阵Y
-      cv::Mat Y = cv::Mat::zeros(n + 1, 1, CV_64FC1);
-      for (int i = 0; i < n + 1; i++)
-      {
-            for (int k = 0; k < N; k++)
-            {
-                  Y.at<double>(i, 0) = Y.at<double>(i, 0) + std::pow(key_point[k].y, i) * key_point[k].x;
-            }
-      }
- 
-      A = cv::Mat::zeros(n + 1, 1, CV_64FC1);
-      //求解矩阵A
-      cv::solve(X, Y, A, cv::DECOMP_LU);
-      return true;
-}
+//bool polynomial_curve_fit(std::vector<cv::Point>& key_point, int n, cv::Mat& A)
+//{
+//      //Number of key points
+//      int N = key_point.size();
+// 
+//      //构造矩阵X
+//      cv::Mat X = cv::Mat::zeros(n + 1, n + 1, CV_64FC1);
+//      for (int i = 0; i < n + 1; i++)
+//      {
+//            for (int j = 0; j < n + 1; j++)
+//            {
+//                  for (int k = 0; k < N; k++)
+//                  {
+//                        X.at<double>(i, j) = X.at<double>(i, j) + std::pow(key_point[k].y, i + j);
+//                  }
+//            }
+//      }
+// 
+//      //构造矩阵Y
+//      cv::Mat Y = cv::Mat::zeros(n + 1, 1, CV_64FC1);
+//      for (int i = 0; i < n + 1; i++)
+//      {
+//            for (int k = 0; k < N; k++)
+//            {
+//                  Y.at<double>(i, 0) = Y.at<double>(i, 0) + std::pow(key_point[k].y, i) * key_point[k].x;
+//            }
+//      }
+// 
+//      A = cv::Mat::zeros(n + 1, 1, CV_64FC1);
+//      //求解矩阵A
+//      cv::solve(X, Y, A, cv::DECOMP_LU);
+//      return true;
+//}
 
 //void drawAtCone(std::vector<cv::Point> trafficCone, cv::Mat &img) {
 //    cv::Moments moments = cv::moments(trafficCone);
@@ -125,33 +125,33 @@ int32_t main(int32_t argc, char **argv) {
             cluon::OD4Session od4{static_cast<uint16_t>(std::stoi(commandlineArguments["cid"]))};
 
             // Handler to receive distance readings (realized as C++ lambda).
-            std::mutex distancesMutex;
-            float front{0};
-            float rear{0};
-            float left{0};
-            float right{0};
-            auto onDistance = [&distancesMutex, &front, &rear, &left, &right](cluon::data::Envelope &&env){
-                auto senderStamp = env.senderStamp();
-                // Now, we unpack the cluon::data::Envelope to get the desired DistanceReading.
-                opendlv::proxy::DistanceReading dr = cluon::extractMessage<opendlv::proxy::DistanceReading>(std::move(env));
+//            std::mutex distancesMutex;
+//            float front{0};
+//            float rear{0};
+//            float left{0};
+//            float right{0};
+//            auto onDistance = [&distancesMutex, &front, &rear, &left, &right](cluon::data::Envelope &&env){
+//                auto senderStamp = env.senderStamp();
+//                // Now, we unpack the cluon::data::Envelope to get the desired DistanceReading.
+//                opendlv::proxy::DistanceReading dr = cluon::extractMessage<opendlv::proxy::DistanceReading>(std::move(env));
 
-                // Store distance readings.
-                std::lock_guard<std::mutex> lck(distancesMutex);
-                switch (senderStamp) {
-                    case 0: front = dr.distance(); break;
-                    case 2: rear = dr.distance(); break;
-                    case 1: left = dr.distance(); break;
-                    case 3: right = dr.distance(); break;
-                }
-            };
-            // Finally, we register our lambda for the message identifier for opendlv::proxy::DistanceReading.
-            od4.dataTrigger(opendlv::proxy::DistanceReading::ID(), onDistance);
+//                // Store distance readings.
+//                std::lock_guard<std::mutex> lck(distancesMutex);
+//                switch (senderStamp) {
+//                    case 0: front = dr.distance(); break;
+//                    case 2: rear = dr.distance(); break;
+//                    case 1: left = dr.distance(); break;
+//                    case 3: right = dr.distance(); break;
+//                }
+//            };
+//            // Finally, we register our lambda for the message identifier for opendlv::proxy::DistanceReading.
+//            od4.dataTrigger(opendlv::proxy::DistanceReading::ID(), onDistance);
             
 
             // LOAD CASCADE CLASSIFIER
             cv::CascadeClassifier kiwi_detector;
             kiwi_detector.load("/usr/cascade.xml");
-            	if (kiwi_detector.empty())
+            	if (kiwi_detector.empty()&VERBOSE)
 	{
 		std::cout << "分类器加载失败!!!" << std::endl;
 		return -1;
@@ -280,7 +280,7 @@ int32_t main(int32_t argc, char **argv) {
                 
 
 
-                //elimnate not-cone objects 
+      //elimnate not-cone objects *****************************************************************************
                 for (auto &BlueconvexHull_each : BlueConvexHulls) {
                    if (isTrafficCone(BlueconvexHull_each)) {
                       blueConesConvex.push_back(BlueconvexHull_each);
@@ -296,96 +296,217 @@ int32_t main(int32_t argc, char **argv) {
                 }
                YellowCones_img = cv::Mat(img.size(), CV_8UC3, cv::Scalar(0, 0, 0));
                cv::drawContours(YellowCones_img, YellowConesConvex, -1, cv::Scalar(255,255,0));
-
-
-                //Draw a rectangle on each dectect blue cone
+     //Find the coordinate of cones and Draw a rectangle on each dectected cone**********************************
                 for (unsigned int i = 0; i < blueConesConvex.size(); i++){
                      auto blueConesConvex_each = blueConesConvex[i];
                      cv::Moments bluemoments = cv::moments(blueConesConvex_each);
                      int xCenter = (int)(bluemoments.m10 / bluemoments.m00);
                      int yCenter = (int)(bluemoments.m01 / bluemoments.m00);
-                  //change cordinate to kiwi car
+                    //change cordinate to kiwi car
                      int xi = xCenter;
                      int yi = yCenter+400;
                      cv::Point blueCones_coordiatei(xi,yi);
                      blueCones_coordiate.push_back(blueCones_coordiatei); 
-                     //std::cout << "xi=" << xi <<"yi" << yi << std::endl;
                      cv::rectangle(imgWithCones, cv::Point(xCenter-25, yCenter+400-50),cv::Point(xCenter+25, yCenter+400+40), cv::Scalar(255,255,0),2);
                 }
-                cv::Point right_init(1280,700);
-                blueCones_coordiate.push_back(right_init); 
-
+                //cv::Point right_init(1280,700);
+                //blueCones_coordiate.push_back(right_init); 
+ 
                 for (unsigned int i = 0; i < YellowConesConvex.size(); i++){
                      auto YellowConesConvex_each=YellowConesConvex[i];
                      cv::Moments Yellowmoments = cv::moments(YellowConesConvex_each);
                      int xCenter = (int)(Yellowmoments.m10 / Yellowmoments.m00);
                      int yCenter = (int)(Yellowmoments.m01 / Yellowmoments.m00);                     
-                //change cordinate to kiwi car
                      int xi = xCenter;
                      int yi = yCenter+400;
                      cv::Point YellowCones_coordiatei(xi,yi);
                      YellowCones_coordiate.push_back(YellowCones_coordiatei);
                      cv::rectangle(imgWithCones, cv::Point(xCenter-25, yCenter+400-50),cv::Point(xCenter+25, yCenter+400+40), cv::Scalar(255,255,255),2);
                 }
-                cv::Point left_init(0,700);
-                YellowCones_coordiate.push_back(left_init); 
+                     
 
-       //cv::Mat image = cv::Mat::zeros(720, 1280, CV_8UC3);
-	//image.setTo(cv::Scalar(100, 0, 0));
- 
+               std::vector<cv::Point> YellowCones_coordiate_copy = YellowCones_coordiate; 
+               std::vector<cv::Point> blueCones_coordiate_copy = blueCones_coordiate; 
+               
+    // fill the corordinate if the dectected cones are not enough*******************************************************
+//               if ((YellowCones_coordiate_copy.size()==1)&(YellowCones_coordiate_copy[0].x>blueCones_coordiate_copy[0].x)){
+//                     YellowCones_coordiate_copy.clear();
+//                     std::cout<< YellowCones_coordiate_copy <<std::endl;
+//               }
 
- 
-//将拟合点绘制到空白图上  
+//               if ((blueCones_coordiate_copy.size()==1)&(blueCones_coordiate_copy[0].x<YellowCones_coordiate_copy[0].x)){
+//                     blueCones_coordiate_copy.clear();
+//                     std::cout<< blueCones_coordiate_copy <<std::endl;
+//               }
+         double Aimx;
+         double Aimy;
+         if ((YellowCones_coordiate_copy.size()==0) &(blueCones_coordiate_copy.size()==0)){
+               Aimx=640;
+               Aimy=200;
+         }else{
+               if (YellowCones_coordiate_copy.size()<1&&blueCones_coordiate_copy.size()>=1){
+                   for (unsigned int i = 0;i
+<blueCones_coordiate_copy.size();i++){
+                       cv::Point YellowOnEdge(0,blueCones_coordiate_copy[i].y);
+                       YellowCones_coordiate_copy.push_back(YellowOnEdge);
+                   }
+               }
 
-	//cv::circle(image, blueCones_coordiate, 5, cv::Scalar(0, 0, 255), 2, 8, 0);
-	
- 
-//绘制折线
-                //cv::polylines(imgWithCones, blueCones_coordiate, false, cv::Scalar(255, 255, 0), 1, 8, 0);
-                cv::Mat A;
-                polynomial_curve_fit(blueCones_coordiate, 2, A);
-                std::vector<cv::Point> blue_points_fitted;
+               if (blueCones_coordiate_copy.size()<1&&YellowCones_coordiate_copy.size()>=1){
+                   for (unsigned int i = 0;i<YellowCones_coordiate_copy.size();i++){
+                       cv::Point blueOnEdge(1280,YellowCones_coordiate_copy[i].y);
+                       blueCones_coordiate_copy.push_back(blueOnEdge);
+                   }
+               }
 
-                for (int y = 300; y < 620; y++)
-                {
-                    double x = A.at<double>(0, 0) + A.at<double>(1, 0) * y + A.at<double>(2, 0)*std::pow(y, 2) + A.at<double>(3, 0)*std::pow(y, 3);
-                    blue_points_fitted.push_back(cv::Point(static_cast<int>(x), y ));
-                }
-                cv::polylines(imgWithCones, blue_points_fitted, false, cv::Scalar(255, 255, 0), 1, 8, 0);
 
-                //Draw blue line on another image
-                cv::Mat image1b = cv::Mat::zeros(720, 1280, CV_8UC3);
-                cv::polylines(image1b, blue_points_fitted, false, cv::Scalar(255, 255, 255), 1, 8, 0);
+                       if (YellowCones_coordiate_copy.size()==1){
+                           YellowCones_coordiate_copy.push_back(YellowCones_coordiate_copy[0]);
+                           YellowCones_coordiate_copy.push_back(YellowCones_coordiate_copy[0]);
+                         
+                        }else if (YellowCones_coordiate_copy.size()==2){
+                           YellowCones_coordiate_copy.push_back(YellowCones_coordiate_copy[1]);
+                        }
 
-                //cv::polylines(imgWithCones, YellowCones_coordiate, false, cv::Scalar(255, 255, 255), 1, 8, 0);
-                cv::Mat B;
-                polynomial_curve_fit(YellowCones_coordiate, 2, B);
-                std::vector<cv::Point> yellow_points_fitted;
+                         if (blueCones_coordiate_copy.size()==1){
+                           blueCones_coordiate_copy.push_back(blueCones_coordiate_copy[0]);
+                           blueCones_coordiate_copy.push_back(blueCones_coordiate_copy[0]);
+                      
+                        }else if (blueCones_coordiate_copy.size()==2){
+                           blueCones_coordiate_copy.push_back(blueCones_coordiate_copy[1]);
+                   
+                        }
+  //compute middle point of each connect line**********************************************************************
+                       std::vector<cv::Point> MiddlePoints; 
+                    for  (unsigned int i = 0; i < 3; i++){
+                                
+                       cv::line(imgWithCones,  YellowCones_coordiate_copy[i],blueCones_coordiate_copy[i], cv::Scalar(0,255,255), 1);
+                
+                       double x1 = (YellowCones_coordiate_copy[i].x+blueCones_coordiate_copy[i].x)/2;
+                       double y1 = (YellowCones_coordiate_copy[i].y+blueCones_coordiate_copy[i].y)/2;
+                       cv::Point MiddlePoint(static_cast<int>(x1),static_cast<int>(y1));
+                       MiddlePoints.push_back(MiddlePoint);
+                       cv::circle(imgWithCones, MiddlePoint, 1, cv::Scalar(0,0,255), -1);
+                       
+                    }
+                       cv::line(imgWithCones,  MiddlePoints[1],MiddlePoints[2], cv::Scalar(0,255,255), 1);
+                       cv::line(imgWithCones,  MiddlePoints[1],MiddlePoints[0], cv::Scalar(0,255,255), 1);
+   // connect the middle point and compute the aiming point************************************************************
 
-                for (int y = 300; y < 620; y++)
-                {
-                    double x = B.at<double>(0, 0) + B.at<double>(1, 0) * y + B.at<double>(2, 0)*std::pow(y, 2) + B.at<double>(3, 0)*std::pow(y, 3);
-                    yellow_points_fitted.push_back(cv::Point(static_cast<int>(x), y));
-                }
-                cv::polylines(imgWithCones, yellow_points_fitted, false, cv::Scalar(255, 255, 255), 1, 8, 0);
+              if (YellowCones_coordiate_copy[0].x==0){
+                  Aimx=50;
+                  double Ay1 = (MiddlePoints[0].y+MiddlePoints[1].y)/2;
+                  double Ay2 = (MiddlePoints[1].y+MiddlePoints[2].y)/2;
+                  Aimy=(Ay1+Ay2)/2;
+              }else if (blueCones_coordiate_copy[0].x==12800){
+                  Aimx=1230;
+                  double Ay1 = (MiddlePoints[0].y+MiddlePoints[1].y)/2;
+                  double Ay2 = (MiddlePoints[1].y+MiddlePoints[2].y)/2;
+                  Aimy=(Ay1+Ay2)/2;
+              }else{
 
-                //Draw yellow line on another image
-                cv::Mat image1y = cv::Mat::zeros(720, 1280, CV_8UC3);
-                cv::polylines(image1y, yellow_points_fitted, false, cv::Scalar(255, 255, 255), 1, 8, 0);
+                    double Ax1 = (MiddlePoints[0].x+MiddlePoints[1].x)/2;
+                    double Ay1 = (MiddlePoints[0].y+MiddlePoints[1].y)/2;
+                    double Ax2 = (MiddlePoints[1].x+MiddlePoints[2].x)/2;
+                    double Ay2 = (MiddlePoints[1].y+MiddlePoints[2].y)/2;
+                    cv::line(imgWithCones, cv::Point(static_cast<int>(Ax1), static_cast<int>(Ay1)),cv::Point(static_cast<int>(Ax2), static_cast<int>(Ay2)), cv::Scalar(0,255,255), 1);
+                    Aimx=(Ax1+Ax2)/2;
+                    Aimy=(Ay1+Ay2)/2;
+                    
 
-                //Draw a half ellipse
-                cv::ellipse(imgWithCones,cv::Point(640,700), cv::Size(960, 250), 0.0, 180.0, 360.0 , cv::Scalar(255, 255, 255), 1, 8, 0);
- 
-                //Draw a half ellipse, multiply,find insection.
-                cv::Mat image2 = cv::Mat::zeros(720, 1280, CV_8UC3);
-                cv::ellipse(image2,cv::Point(640,700), cv::Size(960, 250), 0.0, 180.0, 360.0 , cv::Scalar(255, 255, 255), 1, 8, 0); 
+               }
+            }
+       //Calculate the ground steering angle      
+            cv::Point AimPoint(static_cast<int>(Aimx),static_cast<int>(Aimy));
+            cv::circle(imgWithCones, AimPoint, 8, cv::Scalar(0,255,0), -1);
+            double imageAngleRad=atan((640-Aimx)/(720-Aimy)); 
+            //double imageAngleDeg=imageAngleRad/3.14*180; 
+            
+            double ScaleFactor=0.8;
+            double ScaledAngle=imageAngleRad/ScaleFactor;
+            //std::cout <<"ScaledAngle= "<< ScaledAngle <<std::endl;
+//                //Draw a rectangle on each dectect blue cone
+//                for (unsigned int i = 0; i < blueConesConvex.size(); i++){
+//                     auto blueConesConvex_each = blueConesConvex[i];
+//                     cv::Moments bluemoments = cv::moments(blueConesConvex_each);
+//                     int xCenter = (int)(bluemoments.m10 / bluemoments.m00);
+//                     int yCenter = (int)(bluemoments.m01 / bluemoments.m00);
+//                  //change cordinate to kiwi car
+//                     int xi = xCenter;
+//                     int yi = yCenter+400;
+//                     cv::Point blueCones_coordiatei(xi,yi);
+//                     blueCones_coordiate.push_back(blueCones_coordiatei); 
+//                     //std::cout << "xi=" << xi <<"yi" << yi << std::endl;
+//                     cv::rectangle(imgWithCones, cv::Point(xCenter-25, yCenter+400-50),cv::Point(xCenter+25, yCenter+400+40), cv::Scalar(255,255,0),2);
+//                }
+//                cv::Point right_init(1280,700);
+//                blueCones_coordiate.push_back(right_init); 
 
-                cv::Mat image3 = cv::Mat::zeros(720, 1280, CV_8UC3);
-                cv::Mat image3b = cv::Mat::zeros(720, 1280, CV_8UC3);
-                cv::Mat image3y = cv::Mat::zeros(720, 1280, CV_8UC3);
-                cv::multiply(image1b, image2, image3b, 1.0, -1);
-                cv::multiply(image1y, image2, image3y, 1.0, -1);
-                cv::add(image3b, image3y,image3,cv::noArray(),-1);
+//                for (unsigned int i = 0; i < YellowConesConvex.size(); i++){
+//                     auto YellowConesConvex_each=YellowConesConvex[i];
+//                     cv::Moments Yellowmoments = cv::moments(YellowConesConvex_each);
+//                     int xCenter = (int)(Yellowmoments.m10 / Yellowmoments.m00);
+//                     int yCenter = (int)(Yellowmoments.m01 / Yellowmoments.m00);                     
+//                //change cordinate to kiwi car
+//                     int xi = xCenter;
+//                     int yi = yCenter+400;
+//                     cv::Point YellowCones_coordiatei(xi,yi);
+//                     YellowCones_coordiate.push_back(YellowCones_coordiatei);
+//                     cv::rectangle(imgWithCones, cv::Point(xCenter-25, yCenter+400-50),cv::Point(xCenter+25, yCenter+400+40), cv::Scalar(255,255,255),2);
+//                }
+//                cv::Point left_init(0,700);
+//                YellowCones_coordiate.push_back(left_init); 
+
+//       //cv::Mat image = cv::Mat::zeros(720, 1280, CV_8UC3);
+//	//image.setTo(cv::Scalar(100, 0, 0));
+
+// 
+////绘制折线
+//                //cv::polylines(imgWithCones, blueCones_coordiate, false, cv::Scalar(255, 255, 0), 1, 8, 0);
+//                cv::Mat A;
+//                polynomial_curve_fit(blueCones_coordiate, 2, A);
+//                std::vector<cv::Point> blue_points_fitted;
+
+//                for (int y = 300; y < 620; y++)
+//                {
+//                    double x = A.at<double>(0, 0) + A.at<double>(1, 0) * y + A.at<double>(2, 0)*std::pow(y, 2) + A.at<double>(3, 0)*std::pow(y, 3);
+//                    blue_points_fitted.push_back(cv::Point(static_cast<int>(x), y ));
+//                }
+//                cv::polylines(imgWithCones, blue_points_fitted, false, cv::Scalar(255, 255, 0), 1, 8, 0);
+
+//                //Draw blue line on another image
+//                cv::Mat image1b = cv::Mat::zeros(720, 1280, CV_8UC3);
+//                cv::polylines(image1b, blue_points_fitted, false, cv::Scalar(255, 255, 255), 1, 8, 0);
+
+//                //cv::polylines(imgWithCones, YellowCones_coordiate, false, cv::Scalar(255, 255, 255), 1, 8, 0);
+//                cv::Mat B;
+//                polynomial_curve_fit(YellowCones_coordiate, 2, B);
+//                std::vector<cv::Point> yellow_points_fitted;
+
+//                for (int y = 300; y < 620; y++)
+//                {
+//                    double x = B.at<double>(0, 0) + B.at<double>(1, 0) * y + B.at<double>(2, 0)*std::pow(y, 2) + B.at<double>(3, 0)*std::pow(y, 3);
+//                    yellow_points_fitted.push_back(cv::Point(static_cast<int>(x), y));
+//                }
+//                cv::polylines(imgWithCones, yellow_points_fitted, false, cv::Scalar(255, 255, 255), 1, 8, 0);
+
+//                //Draw yellow line on another image
+//                cv::Mat image1y = cv::Mat::zeros(720, 1280, CV_8UC3);
+//                cv::polylines(image1y, yellow_points_fitted, false, cv::Scalar(255, 255, 255), 1, 8, 0);
+
+//                //Draw a half ellipse
+//                cv::ellipse(imgWithCones,cv::Point(640,700), cv::Size(960, 250), 0.0, 180.0, 360.0 , cv::Scalar(255, 255, 255), 1, 8, 0);
+// 
+//                //Draw a half ellipse, multiply,find insection.
+//                cv::Mat image2 = cv::Mat::zeros(720, 1280, CV_8UC3);
+//                cv::ellipse(image2,cv::Point(640,700), cv::Size(960, 250), 0.0, 180.0, 360.0 , cv::Scalar(255, 255, 255), 1, 8, 0); 
+
+//                cv::Mat image3 = cv::Mat::zeros(720, 1280, CV_8UC3);
+//                cv::Mat image3b = cv::Mat::zeros(720, 1280, CV_8UC3);
+//                cv::Mat image3y = cv::Mat::zeros(720, 1280, CV_8UC3);
+//                cv::multiply(image1b, image2, image3b, 1.0, -1);
+//                cv::multiply(image1y, image2, image3y, 1.0, -1);
+//                cv::add(image3b, image3y,image3,cv::noArray(),-1);
 
 
 
@@ -409,34 +530,50 @@ int32_t main(int32_t argc, char **argv) {
                 if (VERBOSE) {
                     cv::imshow(sharedMemory->name().c_str(), img);
                     //cv::imshow("erode", Blueerode);
-                    cv::imshow("gaussian", Bluegaussian);
-                    cv::imshow("bluecanny", Bluecanny);
-                    cv::imshow("yellowcanny", Yellowcanny);
+                    //cv::imshow("gaussian", Bluegaussian);
+                    //cv::imshow("bluecanny", Bluecanny);
+                    //cv::imshow("yellowcanny", Yellowcanny);
                     //cv::imshow("Contours", BlueContour_img);
                     //cv::imshow("ConvexHulls", BlueConvexHulls_img);
-                    cv::imshow("blueCones_img", blueCones_img);
+                    //cv::imshow("blueCones_img", blueCones_img);
                     cv::imshow("imgWithCones", imgWithCones);
-	cv::imshow("image3", image3);
+	//cv::imshow("image3", image3);
                     cv::waitKey(1);
                 }
 
                 ////////////////////////////////////////////////////////////////
                 // Do something with the distance readings if wanted.
-                {
+//                {
 
-                    std::lock_guard<std::mutex> lck(distancesMutex);
-                    std::cout << "front = " << front << ", "
-                              << "rear = " << rear << ", "
-                              << "left = " << left << ", "
-                              << "right = " << right << "." << std::endl;
-                }
+//                    std::lock_guard<std::mutex> lck(distancesMutex);
+//                    if (VERBOSE){
+//                    std::cout << "front = " << front << ", "
+//                              << "rear = " << rear << ", "
+//                              << "left = " << left << ", "
+//                              << "right = " << right << "." << std::endl;
+//                    }
+//                }
 
                 ////////////////////////////////////////////////////////////////
                 // Example for creating and sending a message to other microservices; can
                 // be removed when not needed.
-                opendlv::proxy::AngleReading ar;
-                ar.angle(123.45f);
-                od4.send(ar);
+         float pedalPosition=0.2f;
+         opendlv::proxy::GroundSteeringRequest groundSteeringAngleRequest;
+         groundSteeringAngleRequest.groundSteering(ScaledAngle);
+         opendlv::proxy::PedalPositionRequest pedalPositionRequest;
+         pedalPositionRequest.position(pedalPosition);
+
+
+        cluon::data::TimeStamp sampleTime = cluon::time::now();
+        od4.send(groundSteeringAngleRequest, sampleTime, 0);
+        od4.send(pedalPositionRequest, sampleTime, 0);
+        if (VERBOSE) {
+          std::cout << "Ground steering angle is " << groundSteeringAngleRequest.groundSteering()
+            << " and pedal position is " << pedalPositionRequest.position() << std::endl;
+        }
+//                opendlv::proxy::AngleReading ar;
+//                ar.angle(123.45f);
+//                od4.send(ar);
 
                 ////////////////////////////////////////////////////////////////
                 // Steering and acceleration/decelration.
