@@ -34,7 +34,7 @@ const int MinHeight = 10;
 const double MaxRatio = 0.2;
 const int MinArea = 50;
 const int MaxArea = 4500;
-
+int GetOnTrack = 0;
 
 // define lambda function 
 bool isTrafficCone(std::vector<cv::Point> convexHull);
@@ -309,8 +309,7 @@ int32_t main(int32_t argc, char **argv) {
                      blueCones_coordiate.push_back(blueCones_coordiatei); 
                      cv::rectangle(imgWithCones, cv::Point(xCenter-25, yCenter+400-50),cv::Point(xCenter+25, yCenter+400+40), cv::Scalar(255,255,0),2);
                 }
-                //cv::Point right_init(1280,700);
-                //blueCones_coordiate.push_back(right_init); 
+
  
                 for (unsigned int i = 0; i < YellowConesConvex.size(); i++){
                      auto YellowConesConvex_each=YellowConesConvex[i];
@@ -329,185 +328,132 @@ int32_t main(int32_t argc, char **argv) {
                std::vector<cv::Point> blueCones_coordiate_copy = blueCones_coordiate; 
                
     // fill the corordinate if the dectected cones are not enough*******************************************************
-//               if ((YellowCones_coordiate_copy.size()==1)&(YellowCones_coordiate_copy[0].x>blueCones_coordiate_copy[0].x)){
-//                     YellowCones_coordiate_copy.clear();
-//                     std::cout<< YellowCones_coordiate_copy <<std::endl;
-//               }
-
-//               if ((blueCones_coordiate_copy.size()==1)&(blueCones_coordiate_copy[0].x<YellowCones_coordiate_copy[0].x)){
-//                     blueCones_coordiate_copy.clear();
-//                     std::cout<< blueCones_coordiate_copy <<std::endl;
-//               }
          double Aimx;
          double Aimy;
+         std::vector<cv::Point> MiddlePoints; 
          if ((YellowCones_coordiate_copy.size()==0) &(blueCones_coordiate_copy.size()==0)){
-               Aimx=640;
+               Aimx=640;//640
                Aimy=200;
          }else{
                if (YellowCones_coordiate_copy.size()<1&&blueCones_coordiate_copy.size()>=1){
                    for (unsigned int i = 0;i
 <blueCones_coordiate_copy.size();i++){
-                       cv::Point YellowOnEdge(0,blueCones_coordiate_copy[i].y);
+                       cv::Point YellowOnEdge(blueCones_coordiate_copy[i].x-500,blueCones_coordiate_copy[i].y);
+                      //cv::Point YellowOnEdge(0,blueCones_coordiate_copy[i].y);
                        YellowCones_coordiate_copy.push_back(YellowOnEdge);
                    }
                }
 
                if (blueCones_coordiate_copy.size()<1&&YellowCones_coordiate_copy.size()>=1){
                    for (unsigned int i = 0;i<YellowCones_coordiate_copy.size();i++){
-                       cv::Point blueOnEdge(1280,YellowCones_coordiate_copy[i].y);
+                       cv::Point blueOnEdge(YellowCones_coordiate_copy[i].x+500,YellowCones_coordiate_copy[i].y);
+                       //cv::Point blueOnEdge(1280,YellowCones_coordiate_copy[i].y);
                        blueCones_coordiate_copy.push_back(blueOnEdge);
                    }
                }
 
 
-                       if (YellowCones_coordiate_copy.size()==1){
-                           YellowCones_coordiate_copy.push_back(YellowCones_coordiate_copy[0]);
-                           YellowCones_coordiate_copy.push_back(YellowCones_coordiate_copy[0]);
+              if (YellowCones_coordiate_copy.size()==1){
+                  YellowCones_coordiate_copy.push_back(YellowCones_coordiate_copy[0]);
+                  YellowCones_coordiate_copy.push_back(YellowCones_coordiate_copy[0]);
                          
-                        }else if (YellowCones_coordiate_copy.size()==2){
-                           YellowCones_coordiate_copy.push_back(YellowCones_coordiate_copy[1]);
-                        }
+              }else if (YellowCones_coordiate_copy.size()==2){
+                  YellowCones_coordiate_copy.push_back(YellowCones_coordiate_copy[1]);
+              }
 
-                         if (blueCones_coordiate_copy.size()==1){
-                           blueCones_coordiate_copy.push_back(blueCones_coordiate_copy[0]);
-                           blueCones_coordiate_copy.push_back(blueCones_coordiate_copy[0]);
-                      
-                        }else if (blueCones_coordiate_copy.size()==2){
-                           blueCones_coordiate_copy.push_back(blueCones_coordiate_copy[1]);
-                   
-                        }
+              if (blueCones_coordiate_copy.size()==1){
+                  blueCones_coordiate_copy.push_back(blueCones_coordiate_copy[0]);
+                  blueCones_coordiate_copy.push_back(blueCones_coordiate_copy[0]);
+              }else if (blueCones_coordiate_copy.size()==2){
+                  blueCones_coordiate_copy.push_back(blueCones_coordiate_copy[1]);
+              }
   //compute middle point of each connect line**********************************************************************
-                       std::vector<cv::Point> MiddlePoints; 
-                    for  (unsigned int i = 0; i < 3; i++){
-                                
-                       cv::line(imgWithCones,  YellowCones_coordiate_copy[i],blueCones_coordiate_copy[i], cv::Scalar(0,255,255), 1);
+             
+              for  (unsigned int i = 0; i < 3; i++){
+                       //check if the yellow cone is on the left side 
+                       if  (YellowCones_coordiate_copy[i].x < blueCones_coordiate_copy[i].x){       
+                          cv::line(imgWithCones,  YellowCones_coordiate_copy[i],blueCones_coordiate_copy[i], cv::Scalar(0,255,255), 1);
                 
-                       double x1 = (YellowCones_coordiate_copy[i].x+blueCones_coordiate_copy[i].x)/2;
-                       double y1 = (YellowCones_coordiate_copy[i].y+blueCones_coordiate_copy[i].y)/2;
-                       cv::Point MiddlePoint(static_cast<int>(x1),static_cast<int>(y1));
-                       MiddlePoints.push_back(MiddlePoint);
-                       cv::circle(imgWithCones, MiddlePoint, 1, cv::Scalar(0,0,255), -1);
-                       
-                    }
+                          double x1 = (YellowCones_coordiate_copy[i].x+blueCones_coordiate_copy[i].x)/2;
+                          double y1 = (YellowCones_coordiate_copy[i].y+blueCones_coordiate_copy[i].y)/2;
+                          cv::Point MiddlePoint(static_cast<int>(x1),static_cast<int>(y1));
+                          MiddlePoints.push_back(MiddlePoint);
+                          cv::circle(imgWithCones, MiddlePoint, 1, cv::Scalar(0,0,255), -1);
+                       }         
+              }
+                    
+             if (MiddlePoints.size()==3){
+                       GetOnTrack = 1;
+                  
                        cv::line(imgWithCones,  MiddlePoints[1],MiddlePoints[2], cv::Scalar(0,255,255), 1);
                        cv::line(imgWithCones,  MiddlePoints[1],MiddlePoints[0], cv::Scalar(0,255,255), 1);
    // connect the middle point and compute the aiming point************************************************************
 
-              if (YellowCones_coordiate_copy[0].x==0){
-                  Aimx=50;
-                  double Ay1 = (MiddlePoints[0].y+MiddlePoints[1].y)/2;
-                  double Ay2 = (MiddlePoints[1].y+MiddlePoints[2].y)/2;
-                  Aimy=(Ay1+Ay2)/2;
-              }else if (blueCones_coordiate_copy[0].x==12800){
-                  Aimx=1230;
-                  double Ay1 = (MiddlePoints[0].y+MiddlePoints[1].y)/2;
-                  double Ay2 = (MiddlePoints[1].y+MiddlePoints[2].y)/2;
-                  Aimy=(Ay1+Ay2)/2;
-              }else{
+                       if (YellowCones_coordiate_copy[0].x==0){
+                            Aimx=(MiddlePoints[0].x+MiddlePoints[1].x)/2;
+                           //Aimx=50;
+                           double Ay1 = (MiddlePoints[0].y+MiddlePoints[1].y)/2;
+                           double Ay2 = (MiddlePoints[1].y+MiddlePoints[2].y)/2;
+                           Aimy=(Ay1+Ay2)/2;
+                      }else if (blueCones_coordiate_copy[0].x==12800){
+                           Aimx=(MiddlePoints[0].x+MiddlePoints[1].x)/2;
+                           //Aimx=1230;
+                           double Ay1 = (MiddlePoints[0].y+MiddlePoints[1].y)/2;
+                           double Ay2 = (MiddlePoints[1].y+MiddlePoints[2].y)/2;
+                           Aimy=(Ay1+Ay2)/2;
+                      }else{
 
-                    double Ax1 = (MiddlePoints[0].x+MiddlePoints[1].x)/2;
-                    double Ay1 = (MiddlePoints[0].y+MiddlePoints[1].y)/2;
-                    double Ax2 = (MiddlePoints[1].x+MiddlePoints[2].x)/2;
-                    double Ay2 = (MiddlePoints[1].y+MiddlePoints[2].y)/2;
-                    cv::line(imgWithCones, cv::Point(static_cast<int>(Ax1), static_cast<int>(Ay1)),cv::Point(static_cast<int>(Ax2), static_cast<int>(Ay2)), cv::Scalar(0,255,255), 1);
-                    Aimx=(Ax1+Ax2)/2;
-                    Aimy=(Ay1+Ay2)/2;
-                    
+                           double Ax1 = (MiddlePoints[0].x+MiddlePoints[1].x)/2;
+                           double Ay1 = (MiddlePoints[0].y+MiddlePoints[1].y)/2;
+                           double Ax2 = (MiddlePoints[1].x+MiddlePoints[2].x)/2;
+                           double Ay2 = (MiddlePoints[1].y+MiddlePoints[2].y)/2;
+                           cv::line(imgWithCones, cv::Point(static_cast<int>(Ax1), static_cast<int>(Ay1)),cv::Point(static_cast<int>(Ax2), static_cast<int>(Ay2)), cv::Scalar(0,255,255), 1);
+                           Aimx=Ax1;
+                           Aimy=Ay1;
+                           //Aimx=(Ax1+Ax2)/2;
+                           //Aimy=(Ay1+Ay2)/2;
+                       }
+            }else if (MiddlePoints.size()==2){
+                  cv::line(imgWithCones,  MiddlePoints[1],MiddlePoints[0], cv::Scalar(0,255,255), 1);
+                       if (YellowCones_coordiate_copy[0].x==0){
+                           Aimx=(MiddlePoints[0].x+MiddlePoints[1].x)/2;
+                           //Aimx=50;
+                           Aimy = (MiddlePoints[0].y+MiddlePoints[1].y)/2;
+                      }else if (blueCones_coordiate_copy[0].x==12800){
+                           Aimx=(MiddlePoints[0].x+MiddlePoints[1].x)/2;
+                           //Aimx=1230;
+                           Aimy= (MiddlePoints[0].y+MiddlePoints[1].y)/2;
+                      }else{
+                           Aimx = (MiddlePoints[0].x+MiddlePoints[1].x)/2;
+                           Aimy = (MiddlePoints[0].y+MiddlePoints[1].y)/2;
+                      } 
 
-               }
+
+            }else if(MiddlePoints.size()==1){
+                       Aimx=MiddlePoints[0].x;
+                       Aimy=MiddlePoints[1].y;
+            }else{
+                       Aimx=640;//640
+                       Aimy=200;               
+            }
+
+                       
             }
        //Calculate the ground steering angle      
             cv::Point AimPoint(static_cast<int>(Aimx),static_cast<int>(Aimy));
             cv::circle(imgWithCones, AimPoint, 8, cv::Scalar(0,255,0), -1);
+            
             double imageAngleRad=atan((640-Aimx)/(720-Aimy)); 
             //double imageAngleDeg=imageAngleRad/3.14*180; 
             
-            double ScaleFactor=0.8;
-            double ScaledAngle=imageAngleRad/ScaleFactor;
+            double ScaleFactor=0.15;
+            double ScaledAngle;
+            if (GetOnTrack == 1){
+               ScaledAngle=imageAngleRad*ScaleFactor;
+            }else{
+               ScaledAngle=0.6;
+            }
             //std::cout <<"ScaledAngle= "<< ScaledAngle <<std::endl;
-//                //Draw a rectangle on each dectect blue cone
-//                for (unsigned int i = 0; i < blueConesConvex.size(); i++){
-//                     auto blueConesConvex_each = blueConesConvex[i];
-//                     cv::Moments bluemoments = cv::moments(blueConesConvex_each);
-//                     int xCenter = (int)(bluemoments.m10 / bluemoments.m00);
-//                     int yCenter = (int)(bluemoments.m01 / bluemoments.m00);
-//                  //change cordinate to kiwi car
-//                     int xi = xCenter;
-//                     int yi = yCenter+400;
-//                     cv::Point blueCones_coordiatei(xi,yi);
-//                     blueCones_coordiate.push_back(blueCones_coordiatei); 
-//                     //std::cout << "xi=" << xi <<"yi" << yi << std::endl;
-//                     cv::rectangle(imgWithCones, cv::Point(xCenter-25, yCenter+400-50),cv::Point(xCenter+25, yCenter+400+40), cv::Scalar(255,255,0),2);
-//                }
-//                cv::Point right_init(1280,700);
-//                blueCones_coordiate.push_back(right_init); 
-
-//                for (unsigned int i = 0; i < YellowConesConvex.size(); i++){
-//                     auto YellowConesConvex_each=YellowConesConvex[i];
-//                     cv::Moments Yellowmoments = cv::moments(YellowConesConvex_each);
-//                     int xCenter = (int)(Yellowmoments.m10 / Yellowmoments.m00);
-//                     int yCenter = (int)(Yellowmoments.m01 / Yellowmoments.m00);                     
-//                //change cordinate to kiwi car
-//                     int xi = xCenter;
-//                     int yi = yCenter+400;
-//                     cv::Point YellowCones_coordiatei(xi,yi);
-//                     YellowCones_coordiate.push_back(YellowCones_coordiatei);
-//                     cv::rectangle(imgWithCones, cv::Point(xCenter-25, yCenter+400-50),cv::Point(xCenter+25, yCenter+400+40), cv::Scalar(255,255,255),2);
-//                }
-//                cv::Point left_init(0,700);
-//                YellowCones_coordiate.push_back(left_init); 
-
-//       //cv::Mat image = cv::Mat::zeros(720, 1280, CV_8UC3);
-//	//image.setTo(cv::Scalar(100, 0, 0));
-
-// 
-////绘制折线
-//                //cv::polylines(imgWithCones, blueCones_coordiate, false, cv::Scalar(255, 255, 0), 1, 8, 0);
-//                cv::Mat A;
-//                polynomial_curve_fit(blueCones_coordiate, 2, A);
-//                std::vector<cv::Point> blue_points_fitted;
-
-//                for (int y = 300; y < 620; y++)
-//                {
-//                    double x = A.at<double>(0, 0) + A.at<double>(1, 0) * y + A.at<double>(2, 0)*std::pow(y, 2) + A.at<double>(3, 0)*std::pow(y, 3);
-//                    blue_points_fitted.push_back(cv::Point(static_cast<int>(x), y ));
-//                }
-//                cv::polylines(imgWithCones, blue_points_fitted, false, cv::Scalar(255, 255, 0), 1, 8, 0);
-
-//                //Draw blue line on another image
-//                cv::Mat image1b = cv::Mat::zeros(720, 1280, CV_8UC3);
-//                cv::polylines(image1b, blue_points_fitted, false, cv::Scalar(255, 255, 255), 1, 8, 0);
-
-//                //cv::polylines(imgWithCones, YellowCones_coordiate, false, cv::Scalar(255, 255, 255), 1, 8, 0);
-//                cv::Mat B;
-//                polynomial_curve_fit(YellowCones_coordiate, 2, B);
-//                std::vector<cv::Point> yellow_points_fitted;
-
-//                for (int y = 300; y < 620; y++)
-//                {
-//                    double x = B.at<double>(0, 0) + B.at<double>(1, 0) * y + B.at<double>(2, 0)*std::pow(y, 2) + B.at<double>(3, 0)*std::pow(y, 3);
-//                    yellow_points_fitted.push_back(cv::Point(static_cast<int>(x), y));
-//                }
-//                cv::polylines(imgWithCones, yellow_points_fitted, false, cv::Scalar(255, 255, 255), 1, 8, 0);
-
-//                //Draw yellow line on another image
-//                cv::Mat image1y = cv::Mat::zeros(720, 1280, CV_8UC3);
-//                cv::polylines(image1y, yellow_points_fitted, false, cv::Scalar(255, 255, 255), 1, 8, 0);
-
-//                //Draw a half ellipse
-//                cv::ellipse(imgWithCones,cv::Point(640,700), cv::Size(960, 250), 0.0, 180.0, 360.0 , cv::Scalar(255, 255, 255), 1, 8, 0);
-// 
-//                //Draw a half ellipse, multiply,find insection.
-//                cv::Mat image2 = cv::Mat::zeros(720, 1280, CV_8UC3);
-//                cv::ellipse(image2,cv::Point(640,700), cv::Size(960, 250), 0.0, 180.0, 360.0 , cv::Scalar(255, 255, 255), 1, 8, 0); 
-
-//                cv::Mat image3 = cv::Mat::zeros(720, 1280, CV_8UC3);
-//                cv::Mat image3b = cv::Mat::zeros(720, 1280, CV_8UC3);
-//                cv::Mat image3y = cv::Mat::zeros(720, 1280, CV_8UC3);
-//                cv::multiply(image1b, image2, image3b, 1.0, -1);
-//                cv::multiply(image1y, image2, image3y, 1.0, -1);
-//                cv::add(image3b, image3y,image3,cv::noArray(),-1);
-
 
 
                 //kiwi detection
@@ -557,7 +503,7 @@ int32_t main(int32_t argc, char **argv) {
                 ////////////////////////////////////////////////////////////////
                 // Example for creating and sending a message to other microservices; can
                 // be removed when not needed.
-         float pedalPosition=0.2f;
+         float pedalPosition=0.3f;
          opendlv::proxy::GroundSteeringRequest groundSteeringAngleRequest;
          groundSteeringAngleRequest.groundSteering(ScaledAngle);
          opendlv::proxy::PedalPositionRequest pedalPositionRequest;
