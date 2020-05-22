@@ -330,14 +330,17 @@ int32_t main(int32_t argc, char **argv) {
     // fill the corordinate if the dectected cones are not enough*******************************************************
          double Aimx;
          double Aimy;
+         //double Aimfarx;
+         //double Aimfary;
          std::vector<cv::Point> MiddlePoints; 
          if ((YellowCones_coordiate_copy.size()==0) &(blueCones_coordiate_copy.size()==0)){
                Aimx=640;//640
                Aimy=200;
+               //Aimfarx=640;
+               //Aimfary=400;
          }else{
                if (YellowCones_coordiate_copy.size()<1&&blueCones_coordiate_copy.size()>=1){
-                   for (unsigned int i = 0;i
-<blueCones_coordiate_copy.size();i++){
+                   for (unsigned int i = 0;i <blueCones_coordiate_copy.size();i++){
                        cv::Point YellowOnEdge(blueCones_coordiate_copy[i].x-500,blueCones_coordiate_copy[i].y);
                       //cv::Point YellowOnEdge(0,blueCones_coordiate_copy[i].y);
                        YellowCones_coordiate_copy.push_back(YellowOnEdge);
@@ -410,8 +413,8 @@ int32_t main(int32_t argc, char **argv) {
                            cv::line(imgWithCones, cv::Point(static_cast<int>(Ax1), static_cast<int>(Ay1)),cv::Point(static_cast<int>(Ax2), static_cast<int>(Ay2)), cv::Scalar(0,255,255), 1);
                            Aimx=Ax1;
                            Aimy=Ay1;
-                           //Aimx=(Ax1+Ax2)/2;
-                           //Aimy=(Ay1+Ay2)/2;
+                           //Aimfarx=Ax2;
+                           //Aimfary=Ay2;
                        }
             }else if (MiddlePoints.size()==2){
                   cv::line(imgWithCones,  MiddlePoints[1],MiddlePoints[0], cv::Scalar(0,255,255), 1);
@@ -431,7 +434,7 @@ int32_t main(int32_t argc, char **argv) {
 
             }else if(MiddlePoints.size()==1){
                        Aimx=MiddlePoints[0].x;
-                       Aimy=MiddlePoints[1].y;
+                       Aimy=MiddlePoints[0].y;
             }else{
                        Aimx=640;//640
                        Aimy=200;               
@@ -445,7 +448,6 @@ int32_t main(int32_t argc, char **argv) {
             
             double imageAngleRad=atan((640-Aimx)/(720-Aimy)); 
             //double imageAngleDeg=imageAngleRad/3.14*180; 
-            
             double ScaleFactor=0.15;
             double ScaledAngle;
             if (GetOnTrack == 1){
@@ -459,18 +461,37 @@ int32_t main(int32_t argc, char **argv) {
                 //kiwi detection
                 cv::Mat img_gray;
                 cv::cvtColor(img.rowRange(300, 650),img_gray, cv::COLOR_BGR2GRAY);
+                int area = 0;
                 std::vector<cv::Rect> kiwi;
 		kiwi_detector.detectMultiScale(img_gray, kiwi, 1.1, 3, 0,cv::Size(72,72), cv::Size(500, 300));
 		for (size_t i = 0; i < kiwi.size(); i++)
 		{
                         cv::Point center(kiwi[i].x + kiwi[i].width / 2,kiwi[i].y + kiwi[i].height / 2 + 300);
 			cv::rectangle(imgWithCones,cv::Point(kiwi[i].x, kiwi[i].y + 300), cv::Point(kiwi[i].x + kiwi[i].width, kiwi[i].y + kiwi[i].height+ 300),cv::Scalar(0, 0, 255), 1, 8, 0);
+                        int detarea = kiwi[i].width * kiwi[i].height;
+                        if (area < detarea){
+                               area = detarea;
+                        }
+                        
 		}
 		//cv::imshow("detect result", imgWithCones);
 
+  // Pedel Position control based on Kiwi detection.
+           float pedalPositionFactor=1.0f;
+                if (area >= 19000 && area < 57600){
+                        //pedalPositionFactor=0.7f;
+                        pedalPositionFactor=((19000.0f-static_cast<float>(area))/38600.0f)+1.0f;
+                        }
+                else if (area >= 57600){
+                        pedalPositionFactor=0.0f;
+                        }
+                else{
+                        pedalPositionFactor=1.0f;
+                        }
 
-
-
+            float pedalPositioninit=0.3f;
+            float pedalPosition=pedalPositioninit * pedalPositionFactor;
+                 
 
                 // Display image.
                 if (VERBOSE) {
@@ -503,7 +524,7 @@ int32_t main(int32_t argc, char **argv) {
                 ////////////////////////////////////////////////////////////////
                 // Example for creating and sending a message to other microservices; can
                 // be removed when not needed.
-         float pedalPosition=0.3f;
+
          opendlv::proxy::GroundSteeringRequest groundSteeringAngleRequest;
          groundSteeringAngleRequest.groundSteering(ScaledAngle);
          opendlv::proxy::PedalPositionRequest pedalPositionRequest;
