@@ -486,8 +486,12 @@ int32_t main(int32_t argc, char **argv) {
                         pedalPositionFactor=0.0f;
                         }
                 else{
+                        if (ScaledAngle>0.08||ScaledAngle<-0.08){
+                        pedalPositionFactor=0.8f;
+                        }else{
                         pedalPositionFactor=1.0f;
                         }
+                    }
 
             float pedalPositioninit=0.3f;
             float pedalPosition=pedalPositioninit * pedalPositionFactor;
