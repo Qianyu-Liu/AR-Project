@@ -54,4 +54,5 @@ RUN apt-get install -y \
 WORKDIR /usr/bin
 COPY --from=builder /tmp/dest /usr
 COPY --from=builder opt/sources/src/cascade.xml /usr
+COPY --from=builder opt/sources/src/cascadekiwiside.xml /usr
 ENTRYPOINT ["/usr/bin/opendlv-perception-helloworld"]
