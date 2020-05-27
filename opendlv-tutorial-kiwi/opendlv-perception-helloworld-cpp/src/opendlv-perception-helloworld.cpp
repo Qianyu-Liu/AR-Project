@@ -149,11 +149,14 @@ int32_t main(int32_t argc, char **argv) {
             
 
             // LOAD CASCADE CLASSIFIER
-            cv::CascadeClassifier kiwi_detector;
-            kiwi_detector.load("/usr/cascade.xml");
-            	if (kiwi_detector.empty()&VERBOSE)
+            cv::CascadeClassifier kiwi_detector_rear;
+            kiwi_detector_rear.load("/usr/cascade.xml");
+
+            cv::CascadeClassifier kiwi_detector_side;
+            kiwi_detector_side.load("/usr/cascadekiwiside.xml");
+            	if (kiwi_detector_rear.empty()&kiwi_detector_side.empty()&VERBOSE)
 	{
-		std::cout << "分类器加载失败!!!" << std::endl;
+		std::cout << "CLASSIFIER LOAD FAIL!!!" << std::endl;
 		return -1;
 	}
             // Endless loop; end the program by pressing Ctrl-C.
@@ -515,18 +518,28 @@ int32_t main(int32_t argc, char **argv) {
 
                 //kiwi detection
                 cv::Mat img_gray;
-                cv::cvtColor(img.rowRange(300, 650),img_gray, cv::COLOR_BGR2GRAY);
+                cv::cvtColor(img.rowRange(200, 650),img_gray, cv::COLOR_BGR2GRAY);
                 int area = 0;
                 std::vector<cv::Rect> kiwi;
-		kiwi_detector.detectMultiScale(img_gray, kiwi, 1.1, 3, 0,cv::Size(72,72), cv::Size(500, 300));
+		kiwi_detector_rear.detectMultiScale(img_gray, kiwi, 1.1, 3, 0,cv::Size(72,72), cv::Size(500, 300));
 		for (size_t i = 0; i < kiwi.size(); i++)
 		{
-                        cv::Point center(kiwi[i].x + kiwi[i].width / 2,kiwi[i].y + kiwi[i].height / 2 + 300);
-			cv::rectangle(imgWithCones,cv::Point(kiwi[i].x, kiwi[i].y + 300), cv::Point(kiwi[i].x + kiwi[i].width, kiwi[i].y + kiwi[i].height+ 300),cv::Scalar(0, 0, 255), 1, 8, 0);
+                        cv::Point center(kiwi[i].x + kiwi[i].width / 2,kiwi[i].y + kiwi[i].height / 2 + 200);
+			cv::rectangle(imgWithCones,cv::Point(kiwi[i].x, kiwi[i].y + 200), cv::Point(kiwi[i].x + kiwi[i].width, kiwi[i].y + kiwi[i].height+ 200),cv::Scalar(0, 0, 255), 1, 8, 0);
                         int detarea = kiwi[i].width * kiwi[i].height;
                         if (area < detarea){
                                area = detarea;
                         }
+                        
+		}
+                //kiwi side detection
+                std::vector<cv::Rect> kiwi_side;
+		kiwi_detector_side.detectMultiScale(img_gray, kiwi_side, 1.1, 3, 0,cv::Size(72,36), cv::Size(800, 400));
+		for (size_t i = 0; i < kiwi_side.size(); i++)
+		{
+                        cv::Point center(kiwi_side[i].x + kiwi_side[i].width / 2,kiwi_side[i].y + kiwi_side[i].height / 2 + 200);
+			cv::rectangle(imgWithCones,cv::Point(kiwi_side[i].x, kiwi_side[i].y + 200), cv::Point(kiwi_side[i].x + kiwi_side[i].width, kiwi_side[i].y + kiwi_side[i].height+ 200),cv::Scalar(0, 255, 255), 1, 8, 0);
+
                         
 		}
 		//cv::imshow("detect result", imgWithCones);
@@ -548,8 +561,23 @@ int32_t main(int32_t argc, char **argv) {
                         }
                     }
 
+// Pedal Position control based on red cones detection and kiwi side detection.
+           float pedalPositionFactor1=1.0f;
+                if (RedCones_coordiate.size()>0 && kiwi_side.size() == 0 ){
+                        //pedalPositionFactor=0.7f;
+                        pedalPositionFactor1=0.6f;
+                        }
+                else if (RedCones_coordiate.size()>0 && kiwi_side.size() > 0 ){
+                        pedalPositionFactor1=0.0f;
+                        }
+                else{
+                        pedalPositionFactor1=1.0f;
+
+                    }
+
+
             float pedalPositioninit=0.3f;
-            float pedalPosition=pedalPositioninit * pedalPositionFactor;
+            float pedalPosition=pedalPositioninit * pedalPositionFactor*pedalPositionFactor1;
                  
 
                 // Display image.
