@@ -143,7 +143,7 @@
     {
       "name" : "wall",
       "dimension" : [11.0, 0.5, 2.0],
-      "textureFile" : "./wall.jpg",
+      "textureFile" : "./wallupdate.jpg",
       "textureSize" : [1.0, 1.0],
       "instances" : [
         [5.0, 0.0, 0.8, 1.57],

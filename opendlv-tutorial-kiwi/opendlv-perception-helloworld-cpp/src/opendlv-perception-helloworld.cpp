@@ -399,17 +399,29 @@ int32_t main(int32_t argc, char **argv) {
          }else{
                if (YellowCones_coordiate_copy.size()<1&&blueCones_coordiate_copy.size()>=1){
                    for (unsigned int i = 0;i <blueCones_coordiate_copy.size();i++){
-                       cv::Point YellowOnEdge(blueCones_coordiate_copy[i].x-500,blueCones_coordiate_copy[i].y);
+                       if (blueCones_coordiate_copy[i].y>450 && blueCones_coordiate_copy[i].x >900){
+                         cv::Point YellowOnEdge(blueCones_coordiate_copy[i].x-700,blueCones_coordiate_copy[i].y);
+                         YellowCones_coordiate_copy.push_back(YellowOnEdge);                      
+                       }else{
+                         cv::Point YellowOnEdge(blueCones_coordiate_copy[i].x-500,blueCones_coordiate_copy[i].y);
+                         YellowCones_coordiate_copy.push_back(YellowOnEdge);
+                       }
                       //cv::Point YellowOnEdge(0,blueCones_coordiate_copy[i].y);
-                       YellowCones_coordiate_copy.push_back(YellowOnEdge);
+                       
                    }
                }
 
+//for test************************************************************************************
                if (blueCones_coordiate_copy.size()<1&&YellowCones_coordiate_copy.size()>=1){
                    for (unsigned int i = 0;i<YellowCones_coordiate_copy.size();i++){
-                       cv::Point blueOnEdge(YellowCones_coordiate_copy[i].x+500,YellowCones_coordiate_copy[i].y);
-                       //cv::Point blueOnEdge(1280,YellowCones_coordiate_copy[i].y);
+                      if (YellowCones_coordiate_copy[i].y>450 && YellowCones_coordiate_copy[i].x <380){
+                       cv::Point blueOnEdge(YellowCones_coordiate_copy[i].x+700,YellowCones_coordiate_copy[i].y);
                        blueCones_coordiate_copy.push_back(blueOnEdge);
+                      }else{
+                       cv::Point blueOnEdge(YellowCones_coordiate_copy[i].x+500,YellowCones_coordiate_copy[i].y);
+                       blueCones_coordiate_copy.push_back(blueOnEdge);
+                      }
+
                    }
                }
 
