@@ -33,3 +33,13 @@ services:
       - PORT=8081
       - OD4SESSION_CID=111
       - PLAYBACK_OD4SESSION_CID=253
+
+  sim-myapp:
+    container_name: sim-myapp
+    image: liuqianyu/dockerfiles:v1.0
+    restart: on-failure
+    network_mode: "host"
+    ipc: "host"
+    volumes:
+      - /tmp:/tmp
+    command: "--rm -ti --init --cid=111 --name=video0.argb --width=1280 --height=720"

@@ -456,7 +456,7 @@ int32_t main(int32_t argc, char **argv) {
               }
                     
              if (MiddlePoints.size()==3){
-                       GetOnTrack = 1;
+                       GetOnTrack++;
                   
                        cv::line(imgWithCones,  MiddlePoints[1],MiddlePoints[2], cv::Scalar(0,255,255), 1);
                        cv::line(imgWithCones,  MiddlePoints[1],MiddlePoints[0], cv::Scalar(0,255,255), 1);
@@ -520,7 +520,7 @@ int32_t main(int32_t argc, char **argv) {
             //double imageAngleDeg=imageAngleRad/3.14*180; 
             double ScaleFactor=0.15;
             double ScaledAngle;
-            if (GetOnTrack == 1){
+            if (GetOnTrack > 1){
                ScaledAngle=imageAngleRad*ScaleFactor;
             }else{
                ScaledAngle=0.6;
