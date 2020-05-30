@@ -4,7 +4,7 @@ services:
   sim-global:
     image: chalmersrevere/opendlv-sim-global-amd64:v0.0.7
     network_mode: "host"
-    command: "/usr/bin/opendlv-sim-global --cid=111 --freq=50 --frame-id=0 --x=0.0 --yaw=0.2 --timemod=0.2"
+    command: "/usr/bin/opendlv-sim-global --cid=111 --freq=50 --frame-id=0 --x=1.9 --y=1.6 --yaw=-3.14 --timemod=0.2"
 
   sim-motor-kiwi:
     image: chalmersrevere/opendlv-sim-motor-kiwi-amd64:v0.0.7
@@ -36,7 +36,7 @@ services:
 
   sim-myapp:
     container_name: sim-myapp
-    image: liuqianyu/dockerfiles:v1.0
+    image: liuqianyu/dockerfiles:v4.0
     restart: on-failure
     network_mode: "host"
     ipc: "host"

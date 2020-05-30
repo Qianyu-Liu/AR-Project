@@ -34,7 +34,6 @@ const int MinHeight = 10;
 const double MaxRatio = 0.2;
 const int MinArea = 50;
 const int MaxArea = 4500;
-int GetOnTrack = 0;
 
 // define lambda function 
 bool isTrafficCone(std::vector<cv::Point> convexHull);
@@ -456,7 +455,6 @@ int32_t main(int32_t argc, char **argv) {
               }
                     
              if (MiddlePoints.size()==3){
-                       GetOnTrack++;
                   
                        cv::line(imgWithCones,  MiddlePoints[1],MiddlePoints[2], cv::Scalar(0,255,255), 1);
                        cv::line(imgWithCones,  MiddlePoints[1],MiddlePoints[0], cv::Scalar(0,255,255), 1);
@@ -520,11 +518,9 @@ int32_t main(int32_t argc, char **argv) {
             //double imageAngleDeg=imageAngleRad/3.14*180; 
             double ScaleFactor=0.15;
             double ScaledAngle;
-            if (GetOnTrack > 1){
-               ScaledAngle=imageAngleRad*ScaleFactor;
-            }else{
-               ScaledAngle=0.6;
-            }
+
+            ScaledAngle=imageAngleRad*ScaleFactor;
+
             //std::cout <<"ScaledAngle= "<< ScaledAngle <<std::endl;
 
 

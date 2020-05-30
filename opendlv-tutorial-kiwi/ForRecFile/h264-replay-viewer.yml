@@ -29,7 +29,7 @@ services:
       - /tmp:/tmp
     environment:
       - DISPLAY=${DISPLAY}
-    command: "--cid=111 --verbose --name=img.argb /opt/recordings/2020-05-14_121543-video-all.rec" # Change the filename here, the path should stay the same
+    command: "--cid=111 --verbose --name=img.argb /opt/recordings/2020-05-14_123249-video-all.rec" # Change the filename here, the path should stay the same
 
   vehicle-view:
     image: chalmersrevere/opendlv-vehicle-view-multi:v0.0.60
