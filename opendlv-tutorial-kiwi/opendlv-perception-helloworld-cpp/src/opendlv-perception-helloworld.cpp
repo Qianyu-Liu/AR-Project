@@ -35,11 +35,7 @@ const double MaxRatio = 0.2;
 const int MinArea = 50;
 const int MaxArea = 4500;
 
-// define lambda function 
 bool isTrafficCone(std::vector<cv::Point> convexHull);
-//void drawAtConeCenter(std::vector<cv::Point> trafficCone, cv::Mat &img);
-
-//lambda function
 bool isTrafficCone(std::vector<cv::Point> convexHull){ 
       cv::Rect bounding = cv::boundingRect(convexHull);
       int area = bounding.area();
@@ -49,48 +45,6 @@ bool isTrafficCone(std::vector<cv::Point> convexHull){
          }
       return true;
       }
-
-
-//bool polynomial_curve_fit(std::vector<cv::Point>& key_point, int n, cv::Mat& A)
-//{
-//      //Number of key points
-//      int N = key_point.size();
-// 
-//      //构造矩阵X
-//      cv::Mat X = cv::Mat::zeros(n + 1, n + 1, CV_64FC1);
-//      for (int i = 0; i < n + 1; i++)
-//      {
-//            for (int j = 0; j < n + 1; j++)
-//            {
-//                  for (int k = 0; k < N; k++)
-//                  {
-//                        X.at<double>(i, j) = X.at<double>(i, j) + std::pow(key_point[k].y, i + j);
-//                  }
-//            }
-//      }
-// 
-//      //构造矩阵Y
-//      cv::Mat Y = cv::Mat::zeros(n + 1, 1, CV_64FC1);
-//      for (int i = 0; i < n + 1; i++)
-//      {
-//            for (int k = 0; k < N; k++)
-//            {
-//                  Y.at<double>(i, 0) = Y.at<double>(i, 0) + std::pow(key_point[k].y, i) * key_point[k].x;
-//            }
-//      }
-// 
-//      A = cv::Mat::zeros(n + 1, 1, CV_64FC1);
-//      //求解矩阵A
-//      cv::solve(X, Y, A, cv::DECOMP_LU);
-//      return true;
-//}
-
-//void drawAtCone(std::vector<cv::Point> trafficCone, cv::Mat &img) {
-//    cv::Moments moments = cv::moments(trafficCone);
-//    int xCenter = (int)(moments.m10 / moments.m00);
-//    int yCenter = (int)(moments.m01 / moments.m00);
-//    cv::circle(img, cv::Point(xCenter, yCenter), 3, cv::Scalar(0,255,255), -1);
-//}
 
 
 
@@ -123,28 +77,6 @@ int32_t main(int32_t argc, char **argv) {
             // Interface to a running OpenDaVINCI session; here, you can send and receive messages.
             cluon::OD4Session od4{static_cast<uint16_t>(std::stoi(commandlineArguments["cid"]))};
 
-            // Handler to receive distance readings (realized as C++ lambda).
-//            std::mutex distancesMutex;
-//            float front{0};
-//            float rear{0};
-//            float left{0};
-//            float right{0};
-//            auto onDistance = [&distancesMutex, &front, &rear, &left, &right](cluon::data::Envelope &&env){
-//                auto senderStamp = env.senderStamp();
-//                // Now, we unpack the cluon::data::Envelope to get the desired DistanceReading.
-//                opendlv::proxy::DistanceReading dr = cluon::extractMessage<opendlv::proxy::DistanceReading>(std::move(env));
-
-//                // Store distance readings.
-//                std::lock_guard<std::mutex> lck(distancesMutex);
-//                switch (senderStamp) {
-//                    case 0: front = dr.distance(); break;
-//                    case 2: rear = dr.distance(); break;
-//                    case 1: left = dr.distance(); break;
-//                    case 3: right = dr.distance(); break;
-//                }
-//            };
-//            // Finally, we register our lambda for the message identifier for opendlv::proxy::DistanceReading.
-//            od4.dataTrigger(opendlv::proxy::DistanceReading::ID(), onDistance);
             
 
             // LOAD CASCADE CLASSIFIER
@@ -242,45 +174,31 @@ int32_t main(int32_t argc, char **argv) {
 
                 cv::Scalar hsvRedLow(160,140,130);
                 cv::Scalar hsvRedHi(180,170,160);
-                //cv::Scalar hsvRedLow1(0,60,100);
-                //cv::Scalar hsvRedHi1(10,255,255);
                 cv::inRange(hsv,hsvRedLow,hsvRedHi,RedColourThreshod);
-                //cv::inRange(hsv,hsvRedLow1,hsvRedHi1,RedColourThreshod);
-                //Ones.copyTo(BlueColourThreshod.rowRange(0, 319));
-                //Ones.row(0, 69).copyTo(BlueColourThreshod.rowRange(650, 719));
-
-
-
-                
-
 
 
 
                 //Dilate
                 uint32_t iterations{12};
                 cv::dilate(BlueColourThreshod.rowRange(450, 650),Bluedilate,cv::Mat(),cv::Point(-1,1),iterations,1,1);
-
                 cv::dilate(YellowColourThreshod.rowRange(450, 650),Yellowdilate,cv::Mat(),cv::Point(-1,1),iterations,1,1);
-
                 cv::dilate(RedColourThreshod.rowRange(450, 650),Reddilate,cv::Mat(),cv::Point(-1,1),iterations,1,1);
+
                 //Erode
                 cv::erode(Bluedilate,Blueerode,cv::Mat(),cv::Point(-1,1),iterations,1,1);
-
                 cv::erode(Yellowdilate,Yellowerode,cv::Mat(),cv::Point(-1,1),iterations,1,1);
-
                 cv::erode(Reddilate,Rederode,cv::Mat(),cv::Point(-1,1),iterations,1,1);
+
                 //Apply Gaussian filter
                 cv::GaussianBlur(Blueerode, Bluegaussian, cv::Size(5, 5), 0);
-
                 cv::GaussianBlur(Yellowerode, Yellowgaussian, cv::Size(5, 5), 0);
-
                 cv::GaussianBlur(Rederode, Redgaussian, cv::Size(5, 5), 0);
+
                 //Edge dectection
                 cv::Canny(Bluegaussian,Bluecanny,30,90,3);  
-
                 cv::Canny(Yellowgaussian,Yellowcanny,30,90,3); 
-                
                 cv::Canny(Redgaussian,Redcanny,30,90,3);
+
                 // find and draw contours
                 cv::findContours(Bluecanny.clone(), Bluecontours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
                 BlueContour_img = cv::Mat(img.size(), CV_8UC3, cv::Scalar(0, 0, 0));
@@ -288,11 +206,12 @@ int32_t main(int32_t argc, char **argv) {
 
                 cv::findContours(Yellowcanny.clone(), Yellowcontours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
                 YellowContour_img = cv::Mat(img.size(), CV_8UC3, cv::Scalar(0, 0, 0));
-                cv::drawContours(YellowContour_img, Yellowcontours, -1, cv::Scalar(255,255,0)); //must be diff. color 
+                cv::drawContours(YellowContour_img, Yellowcontours, -1, cv::Scalar(255,255,0)); 
 
                 cv::findContours(Redcanny.clone(), Redcontours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
                 RedContour_img = cv::Mat(img.size(), CV_8UC3, cv::Scalar(0, 0, 0));
-                cv::drawContours(RedContour_img, Redcontours, -1, cv::Scalar(0,255,0)); //must be diff. color 
+                cv::drawContours(RedContour_img, Redcontours, -1, cv::Scalar(0,255,0)); 
+
                 //find and draw convex hulls
                 std::vector<std::vector<cv::Point> > BlueConvexHulls(Bluecontours.size());
                 for (unsigned int i = 0; i < Bluecontours.size(); i++) {
@@ -317,7 +236,7 @@ int32_t main(int32_t argc, char **argv) {
                 RedConvexHulls_img = cv::Mat(img.size(), CV_8UC3, cv::Scalar(0, 0, 0));
                 cv::drawContours(RedConvexHulls_img, RedConvexHulls, -1, cv::Scalar(0,255,0));
 
-      //elimnate not-cone objects *****************************************************************************
+                //elimnate not-cone objects *****************************************************************************
                 for (auto &BlueconvexHull_each : BlueConvexHulls) {
                    if (isTrafficCone(BlueconvexHull_each)) {
                       blueConesConvex.push_back(BlueconvexHull_each);
@@ -341,7 +260,7 @@ int32_t main(int32_t argc, char **argv) {
                 }
                RedCones_img = cv::Mat(img.size(), CV_8UC3, cv::Scalar(0, 0, 0));
                cv::drawContours(RedCones_img, RedConesConvex, -1, cv::Scalar(0,255,0));
-     //Find the coordinate of cones and Draw a rectangle on each dectected cone**********************************
+               //Find the coordinate of cones and Draw a rectangle on each dectected cone**********************************
                 for (unsigned int i = 0; i < blueConesConvex.size(); i++){
                      auto blueConesConvex_each = blueConesConvex[i];
                      cv::Moments bluemoments = cv::moments(blueConesConvex_each);
@@ -387,16 +306,12 @@ int32_t main(int32_t argc, char **argv) {
      // fill the corordinate if the dectected cones are not enough*******************************************************
          double Aimx;
          double Aimy;
-         //double Aimfarx;
-         //double Aimfary;
          std::vector<cv::Point> MiddlePoints; 
          std::vector<cv::Point> MiddlePointsRed;
       if (RedCones_coordiate.size()<=1){
          if ((YellowCones_coordiate_copy.size()==0) &(blueCones_coordiate_copy.size()==0)){
-               Aimx=640;//640
+               Aimx=640;
                Aimy=200;
-               //Aimfarx=640;
-               //Aimfary=400;
          }else{
                if (YellowCones_coordiate_copy.size()<1&&blueCones_coordiate_copy.size()>=1){
                    for (unsigned int i = 0;i <blueCones_coordiate_copy.size();i++){
@@ -406,13 +321,10 @@ int32_t main(int32_t argc, char **argv) {
                        }else{
                          cv::Point YellowOnEdge(blueCones_coordiate_copy[i].x-500,blueCones_coordiate_copy[i].y);
                          YellowCones_coordiate_copy.push_back(YellowOnEdge);
-                       }
-                      //cv::Point YellowOnEdge(0,blueCones_coordiate_copy[i].y);
-                       
+                       }  
                    }
                }
 
-//for test************************************************************************************
                if (blueCones_coordiate_copy.size()<1&&YellowCones_coordiate_copy.size()>=1){
                    for (unsigned int i = 0;i<YellowCones_coordiate_copy.size();i++){
                       if (YellowCones_coordiate_copy[i].y>450 && YellowCones_coordiate_copy[i].x <380){
@@ -512,42 +424,38 @@ int32_t main(int32_t argc, char **argv) {
 
                        
             }
-          }else if((RedCones_coordiate.size()>1)&(RedCones_coordiate.size()<=3)){
-                Aimx=(RedCones_coordiate[0].x+RedCones_coordiate[1].x)/2;
-                Aimy=(RedCones_coordiate[0].y+RedCones_coordiate[1].y)/2;
-                cv::line(imgWithCones,  RedCones_coordiate[0],RedCones_coordiate[1], cv::Scalar(0,255,255), 1);
-          }else if (RedCones_coordiate.size()>3){
-                int MiddlePointRedx1=(RedCones_coordiate[0].x+RedCones_coordiate[1].x)/2;
-                int MiddlePointRedy1=(RedCones_coordiate[0].y+RedCones_coordiate[1].y)/2;
-                int MiddlePointRedx2=(RedCones_coordiate[2].x+RedCones_coordiate[3].x)/2;
-                int MiddlePointRedy2=(RedCones_coordiate[2].y+RedCones_coordiate[3].y)/2; 
-                cv::line(imgWithCones,  RedCones_coordiate[0],RedCones_coordiate[1], cv::Scalar(0,255,255), 1);
-                cv::line(imgWithCones,  RedCones_coordiate[2],RedCones_coordiate[3], cv::Scalar(0,255,255), 1);          
-                cv::Point MiddlePoint1(static_cast<int>(MiddlePointRedx1),static_cast<int>(MiddlePointRedy1));
-                MiddlePointsRed.push_back(MiddlePoint1);
-                cv::Point MiddlePoint2(static_cast<int>(MiddlePointRedx2),static_cast<int>(MiddlePointRedy2));
-                MiddlePointsRed.push_back(MiddlePoint2);
-                Aimx = (MiddlePointsRed[0].x+MiddlePointsRed[1].x)/2;
-                Aimy = (MiddlePointsRed[0].y+MiddlePointsRed[1].y)/2;
-                cv::line(imgWithCones,MiddlePointsRed[0],MiddlePointsRed[1], cv::Scalar(0,255,255), 1);
-          }else{
+       }else if((RedCones_coordiate.size()>1)&(RedCones_coordiate.size()<=3)){
+            Aimx=(RedCones_coordiate[0].x+RedCones_coordiate[1].x)/2;
+            Aimy=(RedCones_coordiate[0].y+RedCones_coordiate[1].y)/2;
+            cv::line(imgWithCones,  RedCones_coordiate[0],RedCones_coordiate[1], cv::Scalar(0,255,255), 1);
+       }else if (RedCones_coordiate.size()>3){
+            int MiddlePointRedx1=(RedCones_coordiate[0].x+RedCones_coordiate[1].x)/2;
+            int MiddlePointRedy1=(RedCones_coordiate[0].y+RedCones_coordiate[1].y)/2;
+            int MiddlePointRedx2=(RedCones_coordiate[2].x+RedCones_coordiate[3].x)/2;
+            int MiddlePointRedy2=(RedCones_coordiate[2].y+RedCones_coordiate[3].y)/2; 
+            cv::line(imgWithCones,  RedCones_coordiate[0],RedCones_coordiate[1], cv::Scalar(0,255,255), 1);
+            cv::line(imgWithCones,  RedCones_coordiate[2],RedCones_coordiate[3], cv::Scalar(0,255,255), 1);          
+            cv::Point MiddlePoint1(static_cast<int>(MiddlePointRedx1),static_cast<int>(MiddlePointRedy1));
+            MiddlePointsRed.push_back(MiddlePoint1);
+            cv::Point MiddlePoint2(static_cast<int>(MiddlePointRedx2),static_cast<int>(MiddlePointRedy2));
+            MiddlePointsRed.push_back(MiddlePoint2);
+            Aimx = (MiddlePointsRed[0].x+MiddlePointsRed[1].x)/2;
+            Aimy = (MiddlePointsRed[0].y+MiddlePointsRed[1].y)/2;
+            cv::line(imgWithCones,MiddlePointsRed[0],MiddlePointsRed[1], cv::Scalar(0,255,255), 1);
+       }else{
                 Aimx=640;//640
                 Aimy=200; 
-          }  
+       }  
 
 
-       //Calculate the ground steering angle      
-            cv::Point AimPoint(static_cast<int>(Aimx),static_cast<int>(Aimy));
-            cv::circle(imgWithCones, AimPoint, 8, cv::Scalar(0,255,0), -1);
+                //Calculate the ground steering angle      
+                cv::Point AimPoint(static_cast<int>(Aimx),static_cast<int>(Aimy));
+                cv::circle(imgWithCones, AimPoint, 8, cv::Scalar(0,255,0), -1);
             
-            double imageAngleRad=atan((640-Aimx)/(720-Aimy)); 
-            //double imageAngleDeg=imageAngleRad/3.14*180; 
-            double ScaleFactor=0.15;
-            double ScaledAngle;
-
-            ScaledAngle=imageAngleRad*ScaleFactor;
-
-            //std::cout <<"ScaledAngle= "<< ScaledAngle <<std::endl;
+                double imageAngleRad=atan((640-Aimx)/(720-Aimy)); 
+                double ScaleFactor=0.15;
+                double ScaledAngle;
+                ScaledAngle=imageAngleRad*ScaleFactor;
 
 
                 //kiwi detection
@@ -576,7 +484,6 @@ int32_t main(int32_t argc, char **argv) {
 
                         
 		}
-		//cv::imshow("detect result", imgWithCones);
 
   // Pedel Position control based on Kiwi detection.
            float pedalPositionFactor=1.0f;
@@ -625,26 +532,10 @@ int32_t main(int32_t argc, char **argv) {
                     //cv::imshow("ConvexHulls", BlueConvexHulls_img);
                     //cv::imshow("blueCones_img", blueCones_img);
                     cv::imshow("imgWithCones", imgWithCones);
-	//cv::imshow("image3", image3);
                     cv::waitKey(1);
                 }
 
                 ////////////////////////////////////////////////////////////////
-                // Do something with the distance readings if wanted.
-//                {
-
-//                    std::lock_guard<std::mutex> lck(distancesMutex);
-//                    if (VERBOSE){
-//                    std::cout << "front = " << front << ", "
-//                              << "rear = " << rear << ", "
-//                              << "left = " << left << ", "
-//                              << "right = " << right << "." << std::endl;
-//                    }
-//                }
-
-                ////////////////////////////////////////////////////////////////
-                // Example for creating and sending a message to other microservices; can
-                // be removed when not needed.
 
          opendlv::proxy::GroundSteeringRequest groundSteeringAngleRequest;
          groundSteeringAngleRequest.groundSteering(ScaledAngle);
@@ -652,31 +543,13 @@ int32_t main(int32_t argc, char **argv) {
          pedalPositionRequest.position(pedalPosition);
 
 
-        cluon::data::TimeStamp sampleTime = cluon::time::now();
-        od4.send(groundSteeringAngleRequest, sampleTime, 0);
-        od4.send(pedalPositionRequest, sampleTime, 0);
-        if (VERBOSE) {
-          std::cout << "Ground steering angle is " << groundSteeringAngleRequest.groundSteering()
-            << " and pedal position is " << pedalPositionRequest.position() << std::endl;
-        }
-//                opendlv::proxy::AngleReading ar;
-//                ar.angle(123.45f);
-//                od4.send(ar);
-
-                ////////////////////////////////////////////////////////////////
-                // Steering and acceleration/decelration.
-                //
-                // Uncomment the following lines to steer; range: +38deg (left) .. -38deg (right).
-                // Value groundSteeringRequest.groundSteering must be given in radians (DEG/180. * PI).
-                //opendlv::proxy::GroundSteeringRequest gsr;
-                //gsr.groundSteering(0);
-                //od4.send(gsr);
-
-                // Uncomment the following lines to accelerate/decelerate; range: +0.25 (forward) .. -1.0 (backwards).
-                // Be careful!
-                //opendlv::proxy::PedalPositionRequest ppr;
-                //ppr.position(0);
-                //od4.send(ppr);
+         cluon::data::TimeStamp sampleTime = cluon::time::now();
+         od4.send(groundSteeringAngleRequest, sampleTime, 0);
+         od4.send(pedalPositionRequest, sampleTime, 0);
+         if (VERBOSE) {
+           std::cout << "Ground steering angle is " << groundSteeringAngleRequest.groundSteering()
+             << " and pedal position is " << pedalPositionRequest.position() << std::endl;
+         }
               
         }
 
