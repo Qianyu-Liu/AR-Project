@@ -1,6 +1,6 @@
 # AR-Project instruction
 
-Terminal :xhost +
+Terminal :`xhost +`
 
 #Run Task1 in Rec file:
 Put the task 1 rec file in :~/kiwi-recordings
