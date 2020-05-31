@@ -236,12 +236,12 @@ int32_t main(int32_t argc, char **argv) {
                 cv::Scalar hsvBlueHi(124,255,255);
                 cv::inRange(hsv,hsvBlueLow,hsvBlueHi,BlueColourThreshod);
 
-                cv::Scalar hsvYellowLow(5,60,100);
+                cv::Scalar hsvYellowLow(8,60,100);
                 cv::Scalar hsvYellowHi(34,255,255);
                 cv::inRange(hsv,hsvYellowLow,hsvYellowHi,YellowColourThreshod);
 
-                cv::Scalar hsvRedLow(156,60,100);
-                cv::Scalar hsvRedHi(180,255,255);
+                cv::Scalar hsvRedLow(160,140,130);
+                cv::Scalar hsvRedHi(180,170,160);
                 //cv::Scalar hsvRedLow1(0,60,100);
                 //cv::Scalar hsvRedHi1(10,255,255);
                 cv::inRange(hsv,hsvRedLow,hsvRedHi,RedColourThreshod);
@@ -258,11 +258,11 @@ int32_t main(int32_t argc, char **argv) {
 
                 //Dilate
                 uint32_t iterations{12};
-                cv::dilate(BlueColourThreshod.rowRange(400, 650),Bluedilate,cv::Mat(),cv::Point(-1,1),iterations,1,1);
+                cv::dilate(BlueColourThreshod.rowRange(450, 650),Bluedilate,cv::Mat(),cv::Point(-1,1),iterations,1,1);
 
-                cv::dilate(YellowColourThreshod.rowRange(400, 650),Yellowdilate,cv::Mat(),cv::Point(-1,1),iterations,1,1);
+                cv::dilate(YellowColourThreshod.rowRange(450, 650),Yellowdilate,cv::Mat(),cv::Point(-1,1),iterations,1,1);
 
-                cv::dilate(RedColourThreshod.rowRange(400, 650),Reddilate,cv::Mat(),cv::Point(-1,1),iterations,1,1);
+                cv::dilate(RedColourThreshod.rowRange(450, 650),Reddilate,cv::Mat(),cv::Point(-1,1),iterations,1,1);
                 //Erode
                 cv::erode(Bluedilate,Blueerode,cv::Mat(),cv::Point(-1,1),iterations,1,1);
 
@@ -390,6 +390,8 @@ int32_t main(int32_t argc, char **argv) {
          //double Aimfarx;
          //double Aimfary;
          std::vector<cv::Point> MiddlePoints; 
+         std::vector<cv::Point> MiddlePointsRed;
+      if (RedCones_coordiate.size()<=1){
          if ((YellowCones_coordiate_copy.size()==0) &(blueCones_coordiate_copy.size()==0)){
                Aimx=640;//640
                Aimy=200;
@@ -510,6 +512,30 @@ int32_t main(int32_t argc, char **argv) {
 
                        
             }
+          }else if((RedCones_coordiate.size()>1)&(RedCones_coordiate.size()<=3)){
+                Aimx=(RedCones_coordiate[0].x+RedCones_coordiate[1].x)/2;
+                Aimy=(RedCones_coordiate[0].y+RedCones_coordiate[1].y)/2;
+                cv::line(imgWithCones,  RedCones_coordiate[0],RedCones_coordiate[1], cv::Scalar(0,255,255), 1);
+          }else if (RedCones_coordiate.size()>3){
+                int MiddlePointRedx1=(RedCones_coordiate[0].x+RedCones_coordiate[1].x)/2;
+                int MiddlePointRedy1=(RedCones_coordiate[0].y+RedCones_coordiate[1].y)/2;
+                int MiddlePointRedx2=(RedCones_coordiate[2].x+RedCones_coordiate[3].x)/2;
+                int MiddlePointRedy2=(RedCones_coordiate[2].y+RedCones_coordiate[3].y)/2; 
+                cv::line(imgWithCones,  RedCones_coordiate[0],RedCones_coordiate[1], cv::Scalar(0,255,255), 1);
+                cv::line(imgWithCones,  RedCones_coordiate[2],RedCones_coordiate[3], cv::Scalar(0,255,255), 1);          
+                cv::Point MiddlePoint1(static_cast<int>(MiddlePointRedx1),static_cast<int>(MiddlePointRedy1));
+                MiddlePointsRed.push_back(MiddlePoint1);
+                cv::Point MiddlePoint2(static_cast<int>(MiddlePointRedx2),static_cast<int>(MiddlePointRedy2));
+                MiddlePointsRed.push_back(MiddlePoint2);
+                Aimx = (MiddlePointsRed[0].x+MiddlePointsRed[1].x)/2;
+                Aimy = (MiddlePointsRed[0].y+MiddlePointsRed[1].y)/2;
+                cv::line(imgWithCones,MiddlePointsRed[0],MiddlePointsRed[1], cv::Scalar(0,255,255), 1);
+          }else{
+                Aimx=640;//640
+                Aimy=200; 
+          }  
+
+
        //Calculate the ground steering angle      
             cv::Point AimPoint(static_cast<int>(Aimx),static_cast<int>(Aimy));
             cv::circle(imgWithCones, AimPoint, 8, cv::Scalar(0,255,0), -1);

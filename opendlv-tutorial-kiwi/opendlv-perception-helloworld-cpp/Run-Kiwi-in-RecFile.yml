@@ -3,7 +3,7 @@ version: "3.6"
 services:
   rec-myapp:
     container_name: rec-myapp
-    image: liuqianyu/dockerfiles:v2.0
+    image: liuqianyu/dockerfiles:v5.0
     restart: on-failure
     network_mode: "host"
     ipc: "host"
