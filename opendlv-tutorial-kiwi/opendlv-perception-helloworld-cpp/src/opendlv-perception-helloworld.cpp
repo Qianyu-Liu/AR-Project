@@ -349,10 +349,10 @@ int32_t main(int32_t argc, char **argv) {
                      int yCenter = (int)(bluemoments.m01 / bluemoments.m00);
                     //change cordinate to kiwi car
                      int xi = xCenter;
-                     int yi = yCenter+400;
+                     int yi = yCenter+450;
                      cv::Point blueCones_coordiatei(xi,yi);
                      blueCones_coordiate.push_back(blueCones_coordiatei); 
-                     cv::rectangle(imgWithCones, cv::Point(xCenter-25, yCenter+400-50),cv::Point(xCenter+25, yCenter+400+40), cv::Scalar(255,255,0),2);
+                     cv::rectangle(imgWithCones, cv::Point(xCenter-25, yCenter+450-50),cv::Point(xCenter+25, yCenter+450+40), cv::Scalar(255,255,0),2);
                 }
 
  
@@ -362,10 +362,10 @@ int32_t main(int32_t argc, char **argv) {
                      int xCenter = (int)(Yellowmoments.m10 / Yellowmoments.m00);
                      int yCenter = (int)(Yellowmoments.m01 / Yellowmoments.m00);                     
                      int xi = xCenter;
-                     int yi = yCenter+400;
+                     int yi = yCenter+450;
                      cv::Point YellowCones_coordiatei(xi,yi);
                      YellowCones_coordiate.push_back(YellowCones_coordiatei);
-                     cv::rectangle(imgWithCones, cv::Point(xCenter-25, yCenter+400-50),cv::Point(xCenter+25, yCenter+400+40), cv::Scalar(255,255,255),2);
+                     cv::rectangle(imgWithCones, cv::Point(xCenter-25, yCenter+450-50),cv::Point(xCenter+25, yCenter+450+40), cv::Scalar(255,255,255),2);
                 }
                      
 
@@ -375,10 +375,10 @@ int32_t main(int32_t argc, char **argv) {
                      int xCenter = (int)(Redmoments.m10 / Redmoments.m00);
                      int yCenter = (int)(Redmoments.m01 / Redmoments.m00);                     
                      int xi = xCenter;
-                     int yi = yCenter+400;
+                     int yi = yCenter+450;
                      cv::Point RedCones_coordiatei(xi,yi);
                      RedCones_coordiate.push_back(RedCones_coordiatei);
-                     cv::rectangle(imgWithCones, cv::Point(xCenter-25, yCenter+400-50),cv::Point(xCenter+25, yCenter+400+40), cv::Scalar(0,0,255),2);
+                     cv::rectangle(imgWithCones, cv::Point(xCenter-25, yCenter+450-50),cv::Point(xCenter+25, yCenter+450+40), cv::Scalar(0,0,255),2);
                 }
                      
                std::vector<cv::Point> YellowCones_coordiate_copy = YellowCones_coordiate; 
